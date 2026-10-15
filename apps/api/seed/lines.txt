@@ -1,0 +1,57 @@
+# Seed lyric lines for the alignment fixture.
+#
+# "You Verse You" - AI generated, downloaded from https://aisong.org. Words and
+# recording both come from the generator; nothing here is adapted from an
+# existing song, and there is no human author to credit or licence to clear.
+# Candidates are welcome to use it however the exercise needs.
+#
+# Blank lines and lines beginning with '#' are ignored by the seeder.
+# Section headings are comments: the API exposes a flat, indexed list of 28
+# lines. Each line is sung over exactly one bar of the track, in this order, if
+# that helps you place them - nothing in the fixture depends on it.
+#
+# The verse, both pre-choruses and both choruses repeat verbatim, so a line
+# cannot be identified by its text. That is deliberate: anything keyed on text
+# uniqueness will break.
+
+# verse
+You alone it's cold and raining but you go and train
+Put the headset on and go with the flow and show no pain
+You won't quit you keep on going with the flow again
+Next thing you know you're at 150 pushups and still ain't slain
+
+# verse
+You almost quit but you remember it's you verse you
+The rain keeps falling but your will is breaking through
+Each rep you take is like a promise that you renew
+You fight the doubt and let the fire inside you brew
+
+# pre-chorus
+No one else can walk this road you have to climb
+Every drop of sweat is proof you're in your prime
+You push the limit one more time you're in control
+Your only rival is the mirror and your soul
+
+# chorus
+It's you verse you in the rain you stand alone
+You verse you you turn the cold into a throne
+You verse you no quit no break no groan
+You verse you you make the battle your own
+
+# verse (repeat of the first)
+You alone it's cold and raining but you go and train
+Put the headset on and go with the flow and show no pain
+You won't quit you keep on going with the flow again
+Next thing you know you're at 150 pushups and still ain't slain
+
+# pre-chorus (repeat)
+No one else can walk this road you have to climb
+Every drop of sweat is proof you're in your prime
+You push the limit one more time you're in control
+Your only rival is the mirror and your soul
+
+# chorus (repeat)
+It's you verse you in the rain you stand alone
+You verse you you turn the cold into a throne
+You verse you no quit no break no groan
+You verse you you make the battle your own

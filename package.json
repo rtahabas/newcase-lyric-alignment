@@ -1,0 +1,27 @@
+{
+  "name": "lyric-alignment-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "seed": "pnpm --filter @fixture/api run seed",
+    "reset": "pnpm --filter @fixture/api run reset",
+    "build": "pnpm --filter @fixture/web run build",
+    "typecheck": "pnpm --filter @fixture/web run typecheck",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "postinstall": "node scripts/postinstall.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

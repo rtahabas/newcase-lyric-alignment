@@ -1,0 +1,7 @@
+packages:
+  - 'apps/*'
+
+# esbuild (via vite) needs its install script to run, otherwise the platform
+# binary is missing and the dev server will not start on a clean clone.
+onlyBuiltDependencies:
+  - esbuild

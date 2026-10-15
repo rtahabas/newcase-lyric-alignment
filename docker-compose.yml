@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "4000:4000"
+    volumes:
+      # Keeps the SQLite file across restarts. Remove the volume to start clean.
+      - api-data:/app/apps/api/data
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "5173:5173"
+    environment:
+      # Inside the network the API is a service name, not localhost.
+      API_PROXY_TARGET: "http://api:4000"
+    depends_on:
+      - api
+
+volumes:
+  api-data:
