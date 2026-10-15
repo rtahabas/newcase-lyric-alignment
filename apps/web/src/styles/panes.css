@@ -1,0 +1,121 @@
+/* Lyrics list, inspector, karaoke, help, modals. */
+.sheet-input {
+  display: grid;
+  gap: 6px;
+}
+.lyrics__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+.lyric {
+  display: grid;
+  grid-template-columns: 14px 22px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+.lyric:hover {
+  background: var(--surface-2);
+}
+.lyric--timed {
+  border-left-color: var(--timed);
+}
+.lyric--untimed {
+  border-left-color: var(--untimed);
+}
+.lyric--untimed .lyric__time {
+  color: var(--untimed);
+  font-style: italic;
+}
+.lyric.is-selected {
+  background: color-mix(in srgb, var(--select) 14%, var(--surface));
+}
+.lyric.is-focused {
+  box-shadow: inset 0 0 0 1px var(--select);
+}
+.lyric.is-playing .lyric__text {
+  color: var(--accent);
+  font-weight: 600;
+}
+.lyric.drop-before {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+.lyric.drop-after {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.lyric.drop-merge {
+  outline: 2px dashed var(--accent);
+}
+.lyric__grip {
+  color: var(--muted);
+  cursor: grab;
+}
+.lyric__index {
+  color: var(--muted);
+  font: 0.75rem var(--font-mono);
+  text-align: right;
+}
+.lyric__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lyric__time {
+  font: 0.75rem var(--font-mono);
+  color: var(--muted);
+}
+.lyric__warn {
+  color: var(--warn);
+  display: inline-flex;
+}
+.inspector__body {
+  display: grid;
+  gap: 12px;
+}
+.inspector__actions {
+  display: grid;
+  gap: 6px;
+}
+.karaoke {
+  display: grid;
+  gap: 4px;
+  padding: 18px 24px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.karaoke--empty {
+  color: var(--muted);
+}
+.karaoke__side {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.karaoke__now {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.karaoke__now--idle {
+  color: var(--untimed);
+}
+.pane__intro {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  line-height: 1.7;
+}
+.lyric__time kbd {
+  font-size: 0.65rem;
+}

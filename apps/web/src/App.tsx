@@ -1,39 +1,88 @@
-import { useEffect, useState } from 'react';
-import { api, ApiError } from './api';
+import { useCallback, useRef, useState } from 'react';
+import { useTrackSession } from './session/useTrackSession';
+import { Editor } from './app/Editor';
+import { TrackMenu } from './components/tracks/TrackMenu';
+import { NewTrackDialog } from './components/tracks/NewTrackDialog';
+import { ConfirmDiscard } from './components/tracks/ConfirmDiscard';
+import { useFileDrop } from './components/tracks/useFileDrop';
+import { localKey } from './sources/local';
 
 /**
- * Deliberately partial. These are the only fields this placeholder reads; the
- * payload has a good deal more in it. Type the rest as you need it.
+ * Picks the track, loads it, and hands it to the editor. Also owns "bring your
+ * own track": the dialog, and dropping an audio file anywhere on the page.
  */
-type Track = {
-  title: string;
-  audio_url: string;
-  lines: unknown[];
-};
-
 export default function App() {
-  const [track, setTrack] = useState<Track | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const session = useTrackSession();
+  const [dialog, setDialog] = useState<{ file: File | null } | null>(null);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const unsaved = useRef(false);
+  const onFile = useCallback((file: File) => setDialog({ file }), []);
+  const dragging = useFileDrop(onFile);
 
-  useEffect(() => {
-    let live = true;
-    api<Track>('/api/v1/track')
-      .then((t) => { if (live) setTrack(t); })
-      .catch((e: unknown) => {
-        if (!live) return;
-        setError(e instanceof ApiError ? `${e.message} ${JSON.stringify(e.body)}` : String(e));
-      });
-    return () => { live = false; };
+  /** Every track switch goes through here, so unsaved server edits are never dropped silently. */
+  const requestOpen = useCallback(
+    (key: string) => (unsaved.current ? setPendingKey(key) : session.open(key)),
+    [session],
+  );
+  const onDirtyChange = useCallback((dirty: boolean) => {
+    unsaved.current = dirty;
   }, []);
 
-  if (error) return <p>{error}</p>;
-  if (!track) return <p>Loading…</p>;
+  const menu = (
+    <TrackMenu
+      currentKey={session.key}
+      projects={session.projects}
+      onOpen={requestOpen}
+      onNew={() => setDialog({ file: null })}
+      onDeleted={session.refreshProjects}
+    />
+  );
 
+  const { state } = session;
   return (
     <>
-      <h1>{track.title}</h1>
-      <p>{track.lines.length} lines</p>
-      <audio controls src={track.audio_url} />
+      {state.status === 'ready' && (
+        <Editor
+          key={state.track.meta.key}
+          track={state.track}
+          trackMenu={menu}
+          modalOpen={!!dialog || !!pendingKey}
+          onDirtyChange={onDirtyChange}
+        />
+      )}
+      {state.status === 'loading' && <p className="splash">Loading track…</p>}
+      {state.status === 'error' && (
+        <div className="splash" role="alert">
+          <h1>Could not load the track</h1>
+          <p>{state.message}</p>
+          <div className="row">
+            <button onClick={session.retry}>Try again</button>
+            {menu}
+          </div>
+        </div>
+      )}
+      {dragging && <div className="drop-hint">Drop the audio file to start a new track</div>}
+      {dialog && (
+        <NewTrackDialog
+          initialFile={dialog.file}
+          onCancel={() => setDialog(null)}
+          onCreated={(id) => {
+            setDialog(null);
+            session.refreshProjects();
+            requestOpen(localKey(id));
+          }}
+        />
+      )}
+      {pendingKey && (
+        <ConfirmDiscard
+          onKeep={() => setPendingKey(null)}
+          onDiscard={() => {
+            unsaved.current = false;
+            setPendingKey(null);
+            session.open(pendingKey);
+          }}
+        />
+      )}
     </>
   );
 }

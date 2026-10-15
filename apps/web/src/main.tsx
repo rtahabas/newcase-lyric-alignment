@@ -1,10 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import App from './App';
-import './styles.css';
+import './styles/index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
-  </StrictMode>
+    <Tooltip.Provider delayDuration={400}>
+      <App />
+    </Tooltip.Provider>
+  </StrictMode>,
 );

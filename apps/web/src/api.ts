@@ -12,7 +12,7 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly body: unknown,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = 'ApiError';

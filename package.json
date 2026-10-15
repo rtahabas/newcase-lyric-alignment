@@ -14,7 +14,12 @@
     "typecheck": "pnpm --filter @fixture/web run typecheck",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "postinstall": "node scripts/postinstall.mjs"
+    "postinstall": "node scripts/postinstall.mjs",
+    "lint": "pnpm --filter @fixture/web run lint",
+    "format": "pnpm --filter @fixture/web run format && pnpm --filter @fixture/web exec prettier --write ../../e2e",
+    "test:unit": "pnpm --filter @fixture/web run test:unit",
+    "check": "pnpm --filter @fixture/web run check && pnpm --filter @fixture/web exec prettier --check ../../e2e",
+    "measure": "node scripts/measure-perf.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1"

@@ -1,0 +1,147 @@
+/* Tokens and element defaults. Follows the OS colour scheme. */
+:root {
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --surface-2: #f0efeb;
+  --border: #dedcd6;
+  --text: #1c1b19;
+  --muted: #6b6862;
+  --accent: #d9771f; /* playhead, stamp, primary action */
+  --accent-ink: #ffffff;
+  --select: #2f6fd6;
+  --timed: #2f8a5b;
+  --untimed: #b9b4aa;
+  --warn: #b7791f;
+  --danger: #b23a2b;
+  --wave: #9a958b;
+  --block-a: #dbeee3;
+  --block-b: #e3e9f6;
+
+  --radius: 8px;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131416;
+    --surface: #1b1d20;
+    --surface-2: #23262a;
+    --border: #30343a;
+    --text: #e9e8e5;
+    --muted: #979aa0;
+    --accent: #f0943a;
+    --accent-ink: #1a1206;
+    --select: #6b9dff;
+    --timed: #5cc28d;
+    --untimed: #5b5f66;
+    --warn: #e2a948;
+    --danger: #ef7b6a;
+    --wave: #5d6168;
+    --block-a: #1f3a2d;
+    --block-b: #24304a;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+h1 {
+  font-size: 1.05rem;
+}
+h2 {
+  font-size: 0.95rem;
+}
+h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+p {
+  margin: 0;
+}
+kbd {
+  font: 600 0.72rem var(--font-mono);
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+textarea {
+  resize: vertical;
+}
+input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+:focus-visible {
+  outline: 2px solid var(--select);
+  outline-offset: 1px;
+}
+.mono,
+.time-readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 0.8rem;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,133 @@
+/* Ruler, waveform, segment lane, playhead. */
+.timeline {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--bg);
+}
+.timeline__scroller {
+  position: relative;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.timeline__loading {
+  padding: 24px;
+}
+.timeline__content {
+  position: relative;
+  min-height: 100%;
+}
+.timeline__scrub {
+  cursor: text;
+}
+.ruler {
+  position: relative;
+  height: 24px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.ruler__tick {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  padding: 3px 0 0 4px;
+  border-left: 1px solid var(--border);
+  font: 0.7rem var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.wave {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.wave__canvas {
+  --wave: var(--wave);
+  position: sticky;
+  left: 0;
+  display: block;
+}
+.wave__status {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  padding: 12px;
+}
+.lane {
+  position: relative;
+  height: 96px;
+}
+.lane__drop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--accent);
+}
+.block {
+  position: absolute;
+  left: 0;
+  height: 38px;
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  font-size: 0.75rem;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.block--even {
+  top: 8px;
+  background: var(--block-a);
+}
+.block--odd {
+  top: 50px;
+  background: var(--block-b);
+}
+.block.is-selected {
+  border: 2px solid var(--select);
+  z-index: 2;
+}
+.block.is-focused {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--select) 30%, transparent);
+}
+.block.is-warn {
+  border-style: dashed;
+  border-color: var(--warn);
+}
+.block__label {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 30px;
+}
+.block__handle {
+  width: 7px;
+  flex: none;
+  cursor: ew-resize;
+  border-radius: 5px;
+}
+.block__handle:hover {
+  background: color-mix(in srgb, var(--select) 40%, transparent);
+}
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 5;
+  will-change: transform;
+}
+.wave__canvas {
+  --onset: var(--accent);
+}

@@ -1,0 +1,133 @@
+/* The editor's frame: top bar, three panes, karaoke, status line. */
+/* Flex, not grid rows: the banner comes and goes, and must not shift the other rows. */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.topbar__track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.topbar__title {
+  min-width: 0;
+}
+.topbar__title h1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar__transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar__transport select {
+  width: auto;
+}
+.time-readout {
+  font-size: 1.15rem;
+  min-width: 8ch;
+}
+.topbar__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.save-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 290px;
+  min-height: 0;
+}
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 14px;
+  background: var(--surface);
+}
+.lyrics {
+  border-right: 1px solid var(--border);
+}
+.inspector {
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+.pane__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pane__hint {
+  margin-top: auto;
+}
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.statusline {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.statusline__last {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.splash {
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  height: 100vh;
+  text-align: center;
+}
+.drop-hint {
+  position: fixed;
+  inset: 12px;
+  display: grid;
+  place-content: center;
+  border: 3px dashed var(--accent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  font-size: 1.2rem;
+  z-index: 40;
+  pointer-events: none;
+}
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .inspector {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
