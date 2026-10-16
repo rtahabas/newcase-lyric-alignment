@@ -1,5 +1,8 @@
 # Notes
 
+**Live demo:** https://newcase-lyric-alignment.onrender.com — free hosting, so
+the first visit after a quiet spell can take about a minute to wake up.
+
 ```bash
 pnpm install && pnpm dev    # http://localhost:5173 — press ? for shortcuts
 ```
