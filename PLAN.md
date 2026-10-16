@@ -136,5 +136,5 @@ Decisions made along the way go to `decisions.md`, not here.
 
 ### 14. Verification
 - [x] 14.1 `pnpm check`, `pnpm test`, `pnpm build` all green
-- [~] 14.2 Manual run in a browser — agent: scripted browser runs + screenshots throughout; candidate: by hand
+- [x] 14.2 Manual run in a browser — agent: scripted browser runs + screenshots throughout; candidate: by hand (confirmed 2026-10-16)
 - [x] 14.3 Candidate aligned a second real song of their own (reported 2026-10-16)
