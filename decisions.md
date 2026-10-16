@@ -962,3 +962,40 @@ bring stay in their own browser, as locally.
 Checked locally against the production build: all 6 Playwright specs pass
 against the demo server (baseURL :8080), no console errors, audio range
 requests answer 206, and requests without a token get 401 through the proxy.
+
+## 26. The candidate's own single in the track menu (candidate request)
+
+**D26.1 — One click, through the same path a dropped file takes.** "Try:
+Kendim Ettim Kendim Buldum · Taha Baş" sits second in the Load song menu, under
+the seeded track (the candidate's placement). Clicking it fetches
+`/samples/kendim-ettim-kendim-buldum.mp3` into a `File` and opens the New track
+dialog with it, exactly as dropping that file would: title and artist from its
+ID3 tag, lyrics looked up on LRCLIB. No special case in the dialog, so the
+sample demonstrates the real bring-your-own-track flow rather than a shortcut
+around it. A note covers the download (30 s timeout, error shown).
+Not chosen: shipping it as a ready-made local project, which would skip the
+flow the brief treats as pass/fail; preloading it on first visit, which would
+hide the seeded track.
+
+**D26.2 — MP3, not the 46 MB WAV.** Converted with ffmpeg to 160 kb/s MP3
+(5.3 MB, 4:23) and given the ID3 tags the dialog reads. It lives in
+`apps/web/public/samples`, so Vite serves it in development and copies it into
+`dist` for the demo. The API is still unchanged.
+
+**D26.3 — No MIT licence; the recording is all rights reserved.** The
+candidate asked for "MIT, so the song isn't taken". MIT would do the opposite:
+it grants everyone the right to reuse. The repo also contains the company's
+scaffold, which is not the candidate's to license. So there is no licence file
+(default copyright), and `samples/NOTICE.md` states the recording is © the
+candidate, all rights reserved, included only for the demo. The song itself is
+by Neşet Ertaş. A notice cannot stop a download of audio the browser plays.
+
+**D26.4 — LRCLIB has no entry under the candidate's name.** The dialog lists
+other artists' versions to "Use" and says their timings would not line up
+(different length), so timing is done with Start timing. During the check
+LRCLIB briefly answered 503; the dialog showed "Try again / paste the lyrics".
+Bundling a lyric sheet with the sample was considered and left out for now.
+
+Checked: `pnpm check` (77 unit tests), 7/7 Playwright including the new
+`e2e/sample-track.spec.ts` (tags in the dialog, LRCLIB mocked), and by hand on
+the production build against live LRCLIB (no console errors).

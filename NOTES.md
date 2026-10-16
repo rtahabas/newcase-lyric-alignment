@@ -18,7 +18,9 @@ pnpm install && pnpm dev    # http://localhost:5173 — press ? for shortcuts
   conversion.al. Desktop-focused on purpose.
 - **Bring your own track:** pick or drop an audio file; title/artist come from
   its tags, lyrics are looked up on LRCLIB (paste your own if not found).
-  I added a second track of my own and aligned it — it works.
+  I added a second track of my own and aligned it — it works. That track, a
+  single of mine, is in the Load song menu to try in one click (all rights
+  reserved, see `apps/web/public/samples/NOTICE.md`).
 - **Persistence, both paths:** the seeded track saves to the API (409 → keep
   mine / load theirs, 400 hint shown, 15 s timeout); my own tracks live in the
   browser and autosave. **The API is unchanged.**

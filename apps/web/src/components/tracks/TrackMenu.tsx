@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import * as Menu from '@radix-ui/react-dropdown-menu';
-import { Check, ChevronDown, ListMusic, Plus, Server, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, ListMusic, Music, Plus, Server, Trash2 } from 'lucide-react';
 import type { LocalProject } from '../../sources/local';
 import { localKey } from '../../sources/local';
 import { SERVER_KEY } from '../../sources/server';
+import { SAMPLE } from '../../sources/sample';
 import { ConfirmDelete } from './ConfirmDelete';
 
 type Props = {
@@ -11,11 +12,12 @@ type Props = {
   projects: LocalProject[];
   onOpen: (key: string) => void;
   onNew: () => void;
+  onSample: () => void;
   onDeleted: () => void;
 };
 
 /** Switch between the server's track and tracks the user brought; start or delete one. */
-export function TrackMenu({ currentKey, projects, onOpen, onNew, onDeleted }: Props) {
+export function TrackMenu({ currentKey, projects, onOpen, onNew, onSample, onDeleted }: Props) {
   const [deleting, setDeleting] = useState<LocalProject | null>(null);
   const current = projects.find((p) => localKey(p.id) === currentKey);
   const mark = (key: string) =>
@@ -31,6 +33,10 @@ export function TrackMenu({ currentKey, projects, onOpen, onNew, onDeleted }: Pr
           <Menu.Content className="menu" align="start" sideOffset={6}>
             <Menu.Item className="menu__item menu__item--row" onSelect={() => onOpen(SERVER_KEY)}>
               {mark(SERVER_KEY)} <Server size={14} /> Seeded track (server)
+            </Menu.Item>
+            <Menu.Item className="menu__item menu__item--row" onSelect={onSample} data-testid="sample-track">
+              <span className="menu__spacer" /> <Music size={14} /> Try: {SAMPLE.title}
+              <span className="muted small">· {SAMPLE.artist}</span>
             </Menu.Item>
             {projects.length > 0 && <Menu.Separator className="menu__sep" />}
             {projects.map((p) => (
