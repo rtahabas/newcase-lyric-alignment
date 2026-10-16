@@ -19,7 +19,8 @@
     "format": "pnpm --filter @fixture/web run format && pnpm --filter @fixture/web exec prettier --write ../../e2e",
     "test:unit": "pnpm --filter @fixture/web run test:unit",
     "check": "pnpm --filter @fixture/web run check && pnpm --filter @fixture/web exec prettier --check ../../e2e",
-    "measure": "node scripts/measure-perf.mjs"
+    "measure": "node scripts/measure-perf.mjs",
+    "demo": "node scripts/serve-demo.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1"

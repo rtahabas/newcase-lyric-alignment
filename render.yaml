@@ -1,0 +1,19 @@
+# Hosted demo on Render: one web service runs the API and serves the built
+# frontend (scripts/serve-demo.mjs). The free plan sleeps when idle, and the
+# SQLite file is not persistent - a restart reseeds the track.
+services:
+  - type: web
+    name: lyric-alignment-editor
+    runtime: node
+    plan: free
+    branch: lyric-alignment-editor
+    # pnpm via npx, pinned to package.json's packageManager: `corepack enable`
+    # needs write access to the global bin, which a host build may not have.
+    buildCommand: npx -y pnpm@10.14.0 install --frozen-lockfile && npx -y pnpm@10.14.0 build
+    startCommand: node scripts/serve-demo.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.2
+      - key: SKIP_PLAYWRIGHT_BROWSERS
+        value: '1'

@@ -930,3 +930,35 @@ selected". A selection is always of lines (some may be untimed), and "Delete
 2 segments" would wrongly suggest only the timing goes; "Clear timings" is the
 action for that. The sketch's "segments selected" came from an example where
 every line was timed.
+
+## 25. Hosted demo (candidate request: "deploy it so it can be viewed directly")
+
+**D25.1 — Render, one web service; not Vercel.** The editor needs the API for
+the seeded track, its audio and the save/409 flow. The API is a long-running
+Node server on `node:sqlite`. Vercel runs serverless functions with no shared
+writable disk, so the API would have to be rewritten as functions and saves
+would land on throwaway per-instance storage. Hosting only the frontend there
+would open on an error, because the seeded track could not load. A
+frontend-on-Vercel / API-on-Render split works but means two hosts and two
+configs for no gain. The candidate agreed on Render.
+
+**D25.2 — `scripts/serve-demo.mjs` instead of changing the API.** It starts the
+unchanged API as a child process on a private port, serves `apps/web/dist`
+(fingerprinted `/assets` cached for good, the shell `no-cache`, unknown paths
+fall back to the shell) and forwards `/api` to the API. This is the same
+single-origin setup the Vite proxy gives in development, so the frontend needs
+no build-time API URL. No dependencies. If the API exits, the script exits too,
+so the host restarts the whole service instead of serving a half-working app.
+A path that escapes `dist`, including encoded `..` and malformed escapes like
+`%E0` (which first crashed the server; caught before commit), gets the shell,
+not a file or a crash.
+
+**D25.3 — What the free plan means, accepted.** The service sleeps when idle
+(the first visit takes about a minute), and the SQLite file is not persistent:
+a restart reseeds the track. All visitors share one server alignment, so two
+people saving see the 409 flow, which is a fair demo of it. Tracks visitors
+bring stay in their own browser, as locally.
+
+Checked locally against the production build: all 6 Playwright specs pass
+against the demo server (baseURL :8080), no console errors, audio range
+requests answer 206, and requests without a token get 401 through the proxy.
