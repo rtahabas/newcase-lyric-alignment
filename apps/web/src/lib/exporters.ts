@@ -54,8 +54,10 @@ export function toTtml(doc: Doc, meta: ExportMeta): ExportResult {
   const dur = meta.durationMs !== null ? ` dur="${clock(meta.durationMs)}"` : '';
   const text = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<tt xmlns="http://www.w3.org/ns/ttml" xmlns:itunes="http://itunes.apple.com/lyric-ttml-extensions" itunes:timing="Line">',
-    `  <head><metadata><title>${xml(meta.title)}</title></metadata></head>`,
+    // Metadata elements live in the ttm namespace (TTML: ttm:title, not a bare <title>).
+    '<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"' +
+      ' xmlns:itunes="http://itunes.apple.com/lyric-ttml-extensions" itunes:timing="Line">',
+    `  <head><metadata><ttm:title>${xml(meta.title)}</ttm:title></metadata></head>`,
     `  <body${dur}>`,
     '    <div>',
     ...ps,

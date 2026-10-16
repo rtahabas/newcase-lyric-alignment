@@ -22,6 +22,7 @@ export function useRevealFocus(scroller: RefObject<HTMLElement>): void {
     const x0 = msToPx(seg.startMs, z);
     const x1 = msToPx(seg.endMs, z);
     if (x0 >= el.scrollLeft && x1 <= el.scrollLeft + el.clientWidth) return;
-    el.scrollTo({ left: Math.max(0, x0 - el.clientWidth * 0.25), behavior: 'smooth' });
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: Math.max(0, x0 - el.clientWidth * 0.25), behavior: calm ? 'auto' : 'smooth' });
   }, [focus, scroller, player, latest]);
 }

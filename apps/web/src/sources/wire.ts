@@ -47,9 +47,13 @@ export function docToWire(doc: Doc, version: number) {
   };
 }
 
+/** A 409 we can reconcile from: the right error *and* a usable server state. */
 export function isConflict(body: unknown): body is WireConflict {
   return (
-    typeof body === 'object' && body !== null && (body as { error?: unknown }).error === 'version_conflict'
+    typeof body === 'object' &&
+    body !== null &&
+    (body as { error?: unknown }).error === 'version_conflict' &&
+    isWireState(body)
   );
 }
 
@@ -60,3 +64,42 @@ export function hintOf(body: unknown): string | null {
   if (typeof hint === 'string') return typeof error === 'string' ? `${error}: ${hint}` : hint;
   return null;
 }
+
+/*
+ * Runtime checks at the boundary. The types above are only a promise; these
+ * make sure the server kept it before anything downstream relies on it, so a
+ * reshaped or broken response fails here, with a clear message, not three
+ * components later.
+ */
+type Obj = Record<string, unknown>;
+const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isNatural = (v: unknown) => Number.isInteger(v) && (v as number) >= 0;
+
+const isWireLine = (v: unknown): v is WireLine =>
+  isObj(v) && typeof v.id === 'string' && isNatural(v.index) && typeof v.text === 'string';
+
+const isWireSegment = (v: unknown): v is WireSegment =>
+  isObj(v) && typeof v.line_id === 'string' && isNatural(v.start_ms) && isNatural(v.end_ms);
+
+export function isWireState(v: unknown): v is WireState {
+  if (!isObj(v) || !isNatural(v.version) || !Array.isArray(v.lines) || !v.lines.every(isWireLine)) {
+    return false;
+  }
+  const a = v.alignment;
+  return a === null || (isObj(a) && Array.isArray(a.segments) && a.segments.every(isWireSegment));
+}
+
+export function isWireTrack(v: unknown): v is WireTrack {
+  if (!isObj(v)) return false;
+  const fieldsOk =
+    typeof v.id === 'string' &&
+    typeof v.title === 'string' &&
+    typeof v.artist === 'string' &&
+    typeof v.audio_url === 'string' &&
+    typeof v.duration_seconds === 'number' &&
+    Number.isFinite(v.duration_seconds) &&
+    v.duration_seconds > 0;
+  return fieldsOk && isWireState(v);
+}
+
+export const UNEXPECTED_RESPONSE = 'The server answered in an unexpected shape';

@@ -127,3 +127,6 @@ button:disabled {
   color: var(--accent);
   border-color: var(--accent);
 }
+.center {
+  justify-content: center;
+}

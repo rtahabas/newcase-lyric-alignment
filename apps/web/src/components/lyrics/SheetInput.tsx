@@ -5,12 +5,13 @@ import { insertLines, replaceSheet } from '../../editor/lines';
 import { single } from '../../editor/selection';
 
 /**
- * Paste a whole sheet (replace or append) or add one line after the focused
- * one. Both are ordinary undoable edits, so "Replace" needs no confirm dialog.
+ * As in the wireframe: an always-open paste box, "Add all lines", and "+ Add
+ * line" (one line after the focused one). "Replace all" starts the sheet over.
+ * All are ordinary undoable edits, so none needs a confirm dialog.
  */
-export function SheetInput({ startOpen }: { startOpen: boolean }) {
+export function SheetInput() {
   const { editor, dispatch } = useEditor();
-  const [open, setOpen] = useState(startOpen);
+  const [adding, setAdding] = useState(false);
   const [sheet, setSheet] = useState('');
   const [oneLine, setOneLine] = useState('');
   const parsed = parseLyricSheet(sheet);
@@ -30,7 +31,7 @@ export function SheetInput({ startOpen }: { startOpen: boolean }) {
     const { doc, ids } = insertLines(editor.doc, lines.length - 1, parsed);
     dispatch({
       type: 'edit',
-      label: `Append ${parsed.length} lines`,
+      label: `Add ${parsed.length} lines`,
       apply: () => doc,
       select: single(ids[0]),
     });
@@ -47,15 +48,9 @@ export function SheetInput({ startOpen }: { startOpen: boolean }) {
       apply: (d) => insertLines(d, after, [text]).doc,
     });
     setOneLine('');
+    setAdding(false);
   };
 
-  if (!open) {
-    return (
-      <button className="btn-ghost small" onClick={() => setOpen(true)}>
-        Paste lyrics / add a line…
-      </button>
-    );
-  }
   return (
     <div className="sheet-input">
       <label className="visually-hidden" htmlFor="sheet">
@@ -63,41 +58,56 @@ export function SheetInput({ startOpen }: { startOpen: boolean }) {
       </label>
       <textarea
         id="sheet"
-        rows={5}
-        placeholder="Paste a full lyric sheet — one line per row. [Chorus]-style labels are skipped."
+        rows={3}
+        placeholder="Paste full lyrics… ([Chorus]-style labels are skipped)"
         value={sheet}
         onChange={(e) => setSheet(e.target.value)}
       />
       <div className="row">
-        <button className="btn-primary" disabled={!parsed.length} onClick={replace}>
-          Replace sheet{parsed.length ? ` (${parsed.length})` : ''}
-        </button>
-        <button disabled={!parsed.length || !lines.length} onClick={append}>
-          Append
+        <button
+          className="grow center"
+          disabled={!parsed.length}
+          onClick={append}
+          data-testid="add-all-lines"
+        >
+          Add all lines{parsed.length ? ` (${parsed.length})` : ''}
         </button>
         {lines.length > 0 && (
-          <button className="btn-ghost" onClick={() => setOpen(false)}>
-            Hide
+          <button
+            className="btn-ghost small"
+            disabled={!parsed.length}
+            onClick={replace}
+            title="Replace the whole sheet (undoable)"
+          >
+            Replace all
           </button>
         )}
       </div>
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          addOne();
-        }}
-      >
-        <input
-          aria-label="New line"
-          placeholder="Add one line after the focused line"
-          value={oneLine}
-          onChange={(e) => setOneLine(e.target.value)}
-        />
-        <button type="submit" disabled={!oneLine.trim()}>
-          Add
+      {adding ? (
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            addOne();
+          }}
+        >
+          <input
+            autoFocus
+            aria-label="New line"
+            placeholder="New line, added after the focused one"
+            value={oneLine}
+            onChange={(e) => setOneLine(e.target.value)}
+            onKeyDown={(e) => e.key === 'Escape' && setAdding(false)}
+          />
+          <button type="submit" disabled={!oneLine.trim()}>
+            Add
+          </button>
+        </form>
+      ) : (
+        <button className="center" onClick={() => setAdding(true)} data-testid="add-line">
+          + Add line
         </button>
-      </form>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import type { Sync } from '../session/useSync';
 import { useEditor, clampZoom } from '../app/EditorContext';
 import { formatShort } from '../lib/time';
 import { IconButton } from '../ui/IconButton';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { TimeReadout } from './TimeReadout';
 import { SaveControl } from './SaveControl';
 import { ExportMenu } from './ExportMenu';
@@ -65,7 +66,10 @@ export function TopBar({ meta, playerState, sync, trackMenu, onHelp }: Props) {
           <span className="visually-hidden">Playback speed</span>
           <select
             value={playerState.rate}
-            onChange={(e) => player.setRate(Number(e.target.value))}
+            onChange={(e) => {
+              player.setRate(Number(e.target.value));
+              e.currentTarget.blur(); // hand the keyboard back to Space/Enter
+            }}
             title="Playback speed (pitch preserved)"
           >
             {RATES.map((r) => (
@@ -88,6 +92,7 @@ export function TopBar({ meta, playerState, sync, trackMenu, onHelp }: Props) {
         </div>
         <ExportMenu meta={meta} />
         <SaveControl sync={sync} />
+        <ThemeToggle />
         <IconButton label="Keyboard shortcuts" shortcut="?" onClick={onHelp}>
           <Keyboard size={16} />
         </IconButton>

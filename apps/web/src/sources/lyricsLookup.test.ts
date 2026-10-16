@@ -32,15 +32,21 @@ describe('dedupe', () => {
 });
 
 describe('isConfident', () => {
-  it('trusts the same title at any length (covers, other masters)', () => {
-    const neset = c(1, 'Kendim Ettim Kendim Buldum', 347_000);
-    expect(isConfident(neset, 'Kendim ettim kendim buldum(Taha (Baş)', 190_000)).toBe(true);
+  it('trusts the same title at any length when the artist does not contradict it', () => {
+    const neset = { ...c(1, 'Kendim Ettim Kendim Buldum', 347_000), artist: 'Neşet Ertaş' };
+    expect(isConfident(neset, 'Kendim ettim kendim buldum(Taha (Baş)', '', 190_000)).toBe(true);
+    expect(isConfident(neset, 'Kendim ettim kendim buldum', 'Neset Ertas', 190_000)).toBe(true);
+  });
+
+  it('does not trust the same title by a different artist (another song with that name)', () => {
+    const adele = { ...c(1, 'Hello', 295_000), artist: 'Adele' };
+    expect(isConfident(adele, 'Hello', 'Lionel Richy', 250_000)).toBe(false);
   });
 
   it('trusts a different title only at the same length', () => {
-    expect(isConfident(c(1, 'Other', 212_000), 'Song', 210_000)).toBe(true);
-    expect(isConfident(c(1, 'Other', 230_000), 'Song', 210_000)).toBe(false);
-    expect(isConfident(undefined, 'Song', 210_000)).toBe(false);
+    expect(isConfident(c(1, 'Other', 212_000), 'Song', '', 210_000)).toBe(true);
+    expect(isConfident(c(1, 'Other', 230_000), 'Song', '', 210_000)).toBe(false);
+    expect(isConfident(undefined, 'Song', '', 210_000)).toBe(false);
   });
 });
 

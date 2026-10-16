@@ -3,7 +3,7 @@
  * something the user sees and decides on; local tracks autosave, since nothing
  * else can write to them. Every failure keeps the user's edits in memory.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Doc } from '../editor/types';
 import type { EditorAction } from '../editor/reducer';
 import type { LoadedTrack, SaveOutcome } from '../sources/types';
@@ -28,6 +28,13 @@ export function useSync(track: LoadedTrack, doc: Doc, dispatch: (a: EditorAction
   const inFlight = useRef(false);
   const isLocal = track.meta.origin === 'local';
   const dirty = doc !== savedDoc;
+  const localId = track.meta.key.slice(6);
+  // Updated during commit (layout effect), so a save fired right after a field
+  // commits - Cmd+S while typing - reads the doc that includes it.
+  const latest = useRef({ doc, version, dirty, status });
+  useLayoutEffect(() => {
+    latest.current = { doc, version, dirty, status };
+  });
 
   const send = useCallback(
     async (toSave: Doc, onVersion: number) => {
@@ -35,7 +42,7 @@ export function useSync(track: LoadedTrack, doc: Doc, dispatch: (a: EditorAction
       inFlight.current = true;
       setStatus({ kind: 'saving' });
       const outcome: SaveOutcome = isLocal
-        ? saveLocalTrack(track.meta.key.slice(6), toSave, onVersion)
+        ? saveLocalTrack(localId, toSave, onVersion)
         : await saveServerTrack(toSave, onVersion);
       inFlight.current = false;
       switch (outcome.kind) {
@@ -57,10 +64,18 @@ export function useSync(track: LoadedTrack, doc: Doc, dispatch: (a: EditorAction
           break;
       }
     },
-    [isLocal, track.meta.key],
+    [isLocal, localId],
   );
 
-  const save = useCallback(() => void send(doc, version), [send, doc, version]);
+  /**
+   * Same rules as the Save button: nothing to save, a save in flight, or an open
+   * conflict (the banner asks the user to choose) all mean "do nothing".
+   */
+  const save = useCallback(() => {
+    const l = latest.current;
+    if (!l.dirty || l.status.kind === 'saving' || l.status.kind === 'conflict') return;
+    void send(l.doc, l.version);
+  }, [send]);
 
   /** Conflict: overwrite the server with ours, on top of the version they hold now. */
   const keepMine = useCallback(() => {
@@ -82,6 +97,24 @@ export function useSync(track: LoadedTrack, doc: Doc, dispatch: (a: EditorAction
     const t = window.setTimeout(() => void send(doc, version), AUTOSAVE_MS);
     return () => window.clearTimeout(t);
   }, [isLocal, dirty, doc, version, send]);
+
+  // Local tracks: write a pending autosave at once if the editor goes away (track
+  // switch) or the page is hidden/closed, instead of losing it with the timer.
+  useEffect(() => {
+    if (!isLocal) return;
+    const flush = () => {
+      const l = latest.current;
+      if (l.dirty) saveLocalTrack(localId, l.doc, l.version);
+    };
+    const onHide = () => document.visibilityState === 'hidden' && flush();
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onHide);
+      flush();
+    };
+  }, [isLocal, localId]);
 
   useEffect(() => {
     if (!dirty || isLocal) return;

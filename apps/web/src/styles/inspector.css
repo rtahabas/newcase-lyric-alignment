@@ -1,0 +1,28 @@
+/* Inspector fields (wireframe alignment). */
+.readonly-box {
+  display: block;
+  padding: 6px 9px;
+  border: 1.5px dashed var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+}
+.field__label {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.rule {
+  width: 100%;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+/* Multi-selection: the "edits apply to…" note sits at the foot of the pane. */
+.inspector__body--multi {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.inspector__footnote {
+  margin-top: auto;
+  padding-top: 12px;
+}

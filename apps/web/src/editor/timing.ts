@@ -71,10 +71,9 @@ export function stampEnd(doc: Doc, id: LineId, t: Ms): Doc {
  * a verse moves as a block instead of squashing at the edge of the track.
  */
 export function clampShift(doc: Doc, ids: LineId[], deltaMs: Ms, durationMs: Ms | null): Ms {
-  const segs = ids.map((id) => doc.segments[id]).filter((s): s is Segment => !!s);
-  if (segs.length === 0) return 0;
-  const minStart = Math.min(...segs.map((s) => s.startMs));
-  const maxEnd = Math.max(...segs.map((s) => s.endMs));
+  const span = selectionSpan(doc, ids);
+  if (!span) return 0;
+  const { startMs: minStart, endMs: maxEnd } = span;
   let d = Math.round(deltaMs);
   if (minStart + d < 0) d = -minStart;
   if (durationMs !== null && maxEnd + d > durationMs) d = Math.max(durationMs - maxEnd, -minStart);
@@ -93,11 +92,22 @@ export function shiftSegments(doc: Doc, ids: LineId[], deltaMs: Ms, durationMs: 
   return { ...doc, segments };
 }
 
-/** Earliest start among the timed lines in `ids`, or null if none are timed. */
-export function selectionStart(doc: Doc, ids: LineId[]): Ms | null {
-  const starts = ids.flatMap((id) => (doc.segments[id] ? [doc.segments[id].startMs] : []));
-  return starts.length ? Math.min(...starts) : null;
+/** Earliest start and latest end among the timed lines in `ids`; null if none is timed. */
+export function selectionSpan(doc: Doc, ids: LineId[]): Segment | null {
+  let span: Segment | null = null;
+  for (const id of ids) {
+    const s = doc.segments[id];
+    if (!s) continue;
+    span = span
+      ? { startMs: Math.min(span.startMs, s.startMs), endMs: Math.max(span.endMs, s.endMs) }
+      : { ...s };
+  }
+  return span;
 }
+
+/** Earliest start among the timed lines in `ids`, or null if none are timed. */
+export const selectionStart = (doc: Doc, ids: LineId[]): Ms | null =>
+  selectionSpan(doc, ids)?.startMs ?? null;
 
 /** Move the selection as a block so its earliest start lands on `t`. */
 export function moveSelectionTo(doc: Doc, ids: LineId[], t: Ms, durationMs: Ms | null): Doc {

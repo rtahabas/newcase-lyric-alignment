@@ -3,6 +3,7 @@ import type { Peaks } from '../../audio/peaks';
 import type { Viewport } from './useViewport';
 import type { Onsets } from '../../audio/onsets';
 import { msToPx } from './scale';
+import { useThemeVersion } from '../../ui/useTheme';
 
 type Props = { peaks: Peaks; onsets: Onsets | null; zoom: number; view: Viewport; height: number };
 
@@ -14,6 +15,8 @@ type Props = { peaks: Peaks; onsets: Onsets | null; zoom: number; view: Viewport
  */
 export function WaveformCanvas({ peaks, onsets, zoom, view, height }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // Colours come from CSS variables, read at draw time: redraw when they change.
+  const themeVersion = useThemeVersion();
 
   useEffect(() => {
     const canvas = ref.current;
@@ -58,7 +61,7 @@ export function WaveformCanvas({ peaks, onsets, zoom, view, height }: Props) {
     }
     g.globalAlpha = 1;
     performance.measure('waveform:draw', 'waveform:draw:start');
-  }, [peaks, onsets, zoom, view, height]);
+  }, [peaks, onsets, zoom, view, height, themeVersion]);
 
   return <canvas ref={ref} className="wave__canvas" style={{ width: view.width, height }} aria-hidden />;
 }

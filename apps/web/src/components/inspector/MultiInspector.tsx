@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Crosshair, Eraser, Play, Trash2 } from 'lucide-react';
 import { useEditor } from '../../app/EditorContext';
-import { clearTimings, moveSelectionTo, shiftSegments } from '../../editor/timing';
+import { clearTimings, moveSelectionTo, selectionSpan, shiftSegments } from '../../editor/timing';
 import { formatMs } from '../../lib/time';
 import { removeLines } from './lineEdits';
 
@@ -12,9 +12,10 @@ export function MultiInspector({ ids }: { ids: string[] }) {
   const ctx = useEditor();
   const { editor, dispatch, player } = ctx;
   const [amount, setAmount] = useState('');
-  const segs = ids.map((id) => editor.doc.segments[id]).filter(Boolean);
-  const start = segs.length ? Math.min(...segs.map((s) => s.startMs)) : null;
-  const end = segs.length ? Math.max(...segs.map((s) => s.endMs)) : null;
+  const timedCount = ids.filter((id) => editor.doc.segments[id]).length;
+  const span = selectionSpan(editor.doc, ids);
+  const start = span?.startMs ?? null;
+  const end = span?.endMs ?? null;
   const n = `${ids.length} lines`;
 
   const shift = (delta: number) =>
@@ -27,10 +28,10 @@ export function MultiInspector({ ids }: { ids: string[] }) {
   const amountOk = amount.trim() !== '' && Number.isInteger(parsed) && parsed !== 0;
 
   return (
-    <div className="inspector__body" data-testid="inspector-multi">
-      <h2>{ids.length} lines selected</h2>
+    <div className="inspector__body inspector__body--multi" data-testid="inspector-multi">
+      <h2>{n} selected</h2>
       <p className="muted small">
-        Edits apply to all {ids.length}. {segs.length} timed
+        {timedCount} timed
         {start !== null && end !== null && (
           <>
             {' '}
@@ -38,7 +39,7 @@ export function MultiInspector({ ids }: { ids: string[] }) {
           </>
         )}
       </p>
-      <fieldset className="field" disabled={!segs.length}>
+      <fieldset className="field" disabled={!timedCount}>
         <legend>Shift together</legend>
         <div className="row wrap">
           {STEPS.map((s) => (
@@ -91,7 +92,7 @@ export function MultiInspector({ ids }: { ids: string[] }) {
           <Play size={14} /> Play selection <kbd>P</kbd>
         </button>
         <button
-          disabled={!segs.length}
+          disabled={!timedCount}
           onClick={() =>
             dispatch({ type: 'edit', label: `Clear timing of ${n}`, apply: (d) => clearTimings(d, ids) })
           }
@@ -102,6 +103,10 @@ export function MultiInspector({ ids }: { ids: string[] }) {
           <Trash2 size={14} /> Delete {n}
         </button>
       </div>
+      {/* As in the wireframe: the scope of every edit, at the foot of the panel. */}
+      <p className="inspector__footnote muted small" data-testid="selection-note">
+        {n} selected — edits apply to {ids.length === 2 ? 'both' : `all ${ids.length}`}.
+      </p>
     </div>
   );
 }

@@ -12,6 +12,40 @@ candidate chose; this file is what the agent chose for them.
 
 ---
 
+## Index by area (read this first)
+
+This log is **chronological on purpose** — the README asks for it to be written
+as the work happens, not reconstructed — so later entries revise earlier ones
+and say so. This index regroups the same entries the way an engineer would
+review them. Nothing below the index was reordered or rewritten.
+
+| Area | Entries |
+| --- | --- |
+| **Scope and priorities** | D0.1, D0.2 (README's "what we look for" sets the order), D2.4 (plan), D18.1 (desktop-focused) |
+| **Architecture and state** | D0.3 (two persistence paths), D0.4 → D4.1 (libraries), D0.5 (one units boundary), D1.4 (undo snapshots), D1.5 → D11.3 (selection in undo), D13.3 (warnings shown, not enforced), D14.14 (one span helper) |
+| **Core timing loop** | D1.1–D1.3 (stamp model), D3.1, D9.1 (Start timing), D10.1–D10.3 (onset snap), D14.3 (kept end) |
+| **Timeline editing** | D3.2 (audition), D3.3 (snap, linked edges), D13.4 (merge/split), D14.4 (merge only neighbours), D14.8 (scrub), D15.1–D15.2 (drag/selection overlays), D17.1 (resizable panes), D23.5–D23.6 (cursor, no text selection) |
+| **Lyrics list and navigation** | D8.1 → D8.4 (double-click), D8.2 (reveal selection, revises D3.6), D8.3, D11.5 (Alt+↑↓), D13.2 → D14.11 (sheet parsing) |
+| **Keyboard** | D13.1 (key map), D6.1 (no shortcuts in dialogs, no key repeat), D14.5 (buttons reachable by Tab), D14.6, D14.7 (Cmd+S) |
+| **Bring your own track (pass/fail)** | D5.1–D5.6, D14.13 (insecure contexts), D14.15 (URL probe), D19.3 (stored data validated) |
+| **Lyrics lookup (LRCLIB)** | D7.1–D7.7, D7.4 → D7.8 → D14.10 (confidence), D7.2 → D9.2–D9.4 (opt-in timed draft), D14.9, D14.12 |
+| **Persistence and API** | D0.3, D6.1 (unsaved-switch guard), D14.1 (local autosave flush), D14.7, D22.1 (fetch, not axios), D22.2 (timeouts, response validation) |
+| **Export** | D3.5 (LRC + TTML), D16.1–D16.2 (checked by ffmpeg and xmllint) |
+| **Visual design and layout** | D13.5, D15.1, D20.1–D20.2 (conversion.al-inspired), D21.1–D21.2 (theme choice), D24.1–D24.3 |
+| **Accessibility** | D19.1 (axe: 0 violations), D20.2, D14.5, D17.1, D23.1 |
+| **Loading, errors, resilience** | D19.2 (error boundary), D19.3, D19.4, D22.2, D23.1–D23.4 (skeletons, no theme flash) |
+| **Performance** | D12.1–D12.3 (`pnpm measure`), D10.3, D23.2 |
+| **Tooling and code quality** | D0.6 (ESLint, 150-line cap), D2.1–D2.3, D11.4 |
+| **Testing and verification** | D2.2, D5.5, D6.1, D9.4, D11.1–D11.3, D12.3, D16.1 |
+| **Prior art** | D3.1–D3.6 (Musixmatch, Aegisub, Apple TTML) |
+| **Mistakes found and fixed** | D5.6, D6.1, D6.2 (a crash this log does not hide), D14 (code review), D16.2, D21.2 |
+
+Decisions the **candidate** made (the agent's are everything else): D0.6, D2.4,
+D4.1 (challenge), §3 (research), §7, D9 ("both"), §10 (stay in scope), §15,
+D18.1, §20, §21.
+
+---
+
 ## 0. Before writing code
 
 **D0.1 — Read the whole brief, API and harness before deciding anything.**
@@ -565,3 +599,334 @@ playhead, stamping and primary actions; light/dark follow the OS. Blocks
 alternate between two rows so back-to-back and overlapping lines stay
 distinguishable. Zoom 10–400 px/s, default 60 px/s; snap distance 8 px on
 screen. Guessed: those numbers; they are named constants.
+
+## 14. Code review fixes (candidate ran `/code-review high` on the branch)
+
+Two review passes reported 15 issues (unverified by the tool). The candidate
+asked for all of them to be fixed without leaving the README's scope. Each was
+reproduced or reasoned through first, fixed, and then checked in a browser by a
+17-step script (all pass), plus the earlier 35-step regression script, 68 unit
+tests (5 new) and the 6 Playwright specs.
+
+**Data loss**
+- **D14.1 — Local autosave could be lost** (400 ms timer cleared on unmount, no
+  unload guard). Pending edits are now written at once on unmount (track
+  switch), `pagehide` and `visibilitychange: hidden`. Verified: a stamp made
+  just before switching tracks, and one made just before a reload, both survive.
+- **D14.2 — A half-typed Inspector field was dropped** when a timeline block was
+  clicked (pointerdown's preventDefault kept focus, the field unmounted without
+  blurring). The block's pointerdown now blurs the active element first, so the
+  field commits.
+- **D14.3 — A kept end was overwritten one stamp later.** Re-stamping a start
+  keeps a good end (D1.2), but the line was still marked "open", so the next
+  stamp pulled that end. A kept end is no longer provisional. Unit-tested.
+- **D14.4 — Revises D13.4 / the list drag: merge only with a neighbour.**
+  Dropping on the middle of a distant row used to merge across the gap
+  (scrambled text, one segment spanning everything between); it now moves the
+  line there. The drop preview shows which will happen (the source row is
+  tracked in `lineDrag.ts`, since dataTransfer is unreadable during dragover).
+
+**Keyboard and interaction**
+- **D14.5 — Revises D6.1: Enter/Space on a control reached by Tab activate it.**
+  D6.1 sent Enter/Space to stamping/playback even on a focused button, which
+  made buttons unusable from the keyboard. Now: a control the pointer just
+  focused leaves Enter/Space to the editor (click Save, keep timing with Enter);
+  a control reached with Tab gets them. `:focus-visible` was tried first and
+  failed in the browser check — Chromium turns it on at the key press — so the
+  hook tracks the pointer-focused control itself.
+- **D14.6 — The speed select kept focus** and swallowed Space/Enter; it now
+  hands focus back after a change.
+- **D14.7 — Cmd+S follows the Save button's rules** (nothing to save, a save in
+  flight, or an open conflict → do nothing), and commits a focused field before
+  saving, so text typed and not yet blurred is included. The save reads the
+  latest doc from a layout-effect ref for exactly that case.
+- **D14.8 — Scrubbing drifted from the pointer.** Two causes: a stale bounding
+  box (now measured on every move) and the playhead follow scrolling the view
+  under a still pointer (follow is paused while scrubbing).
+
+**Lyrics lookup**
+- **D14.9 — "Use" on another match, and clearing the sheet, now stick.** Each
+  lookup result may auto-fill at most once, and never over the user's own pick
+  or typing.
+- **D14.10 — Revises D7.8: the same title alone is not enough.** A same-title
+  match auto-fills only when the artist does not contradict it (either side
+  unknown, or they share a real word). The candidate's own case (no artist) is
+  unchanged; "Hello" by a mistyped Lionel Richie no longer fills Adele's lyrics.
+- **D14.11 — Revises D13.2: sung lines in parentheses are kept.** Only
+  label-like parentheticals ("(Chorus x2)", "(Pre-Chorus)", "(x2)") are dropped;
+  "(Ooh, baby)" is a backing vocal and stays.
+- **D14.12 — ID3 "UTF-16 with BOM" honours a big-endian BOM** instead of
+  assuming little-endian.
+
+**Robustness and cleanup**
+- **D14.13 — No more unguarded `crypto.randomUUID`.** It does not exist over
+  plain http on a LAN address (e.g. the docker-compose setup reached by IP),
+  which made creating a track — the pass/fail path — throw. One guarded
+  `shortId()` in `lib/ids.ts` is used everywhere. Verified with randomUUID
+  deleted in the page.
+- **D14.14 — One `selectionSpan` helper** replaces four copies of the same
+  min-start/max-end calculation.
+- **D14.15 — The audio-URL check waits for typing to pause** (500 ms; a picked
+  file is still checked at once). Verified: typing a URL fires one request.
+
+## 15. Wireframe alignment (candidate: "add what is missing, keep our extras")
+
+The README says the wireframe is not a contract; the candidate chose to adopt
+its missing feedback affordances while keeping additions that serve speed.
+Done so far (CSS only): trim handles always visible on blocks; a grip on the
+playhead; placed lines recede in the list, lines still to place stand out.
+Still to do: snap guide line while dragging; "origin" ghost of a dragged block;
+"N segments selected" frame on the lane; always-open paste box with "Add all
+lines" / "+ Add line"; "LINES · N / M placed" header; "Load song" and an
+"Export LRC" primary button; Inspector titled "Segment" with a read-only
+duration box. Kept on purpose: two-row lane (D13.5), no Confidence field
+(README), Start timing, onset snap, speed, TTML.
+
+**D15.1 — Completed.** Added after the first CSS pass:
+- While dragging: a dashed **"origin"** ghost where the moved blocks started
+  (on the block's own row), and a dashed **"snap"** guide through the ruler and
+  waveform at the edge that caught (`snapMove` now also returns where it
+  snapped; `LaneOverlays.tsx`). A multi-line selection gets a dashed frame
+  labelled **"N segments selected"**.
+- Lyrics pane: the paste box is always open, with **"Add all lines"** (appends)
+  and **"+ Add line"** (inline field, after the focused line); "Replace all"
+  stays as a small secondary action. A **"LINES · N / M placed"** header sits
+  above the list.
+- Top bar: **"Load song"** (the track menu, which also holds "New track from
+  your audio…") and a one-click **"Export LRC"** with other formats behind a
+  chevron.
+- Inspector: titled **"Segment"**, a read-only **duration box**, and the
+  wireframe's actions first (Merge with next, Split, Delete); Play and Clear
+  timing below a rule.
+- Guessed: once a timing pass is under way, the "Start timing" how-to shrinks
+  to its button, because with the always-open paste box the list otherwise
+  showed only about a dozen lines.
+Verified: 68 unit tests, 6 Playwright specs (one updated for the export
+button), the 35- and 17-step browser scripts, and screenshots of a drag
+(ghost, snap guide) and a selection (frame).
+
+**D15.2 — The "N segments selected" label stays on screen.** It was pinned to
+the frame's left edge, so a selection starting left of the visible area hid
+it. The lane now receives the viewport's left edge and slides the label right
+to stay visible, never past the frame's own end. Verified with the frame
+scrolled 150 px off the left edge: label fully visible.
+
+## 16. Export formats checked by independent tools (candidate asked whether they really work)
+
+**D16.1 — Export now checked by tools that are not ours.** The README lists
+LRC export as an idea, TTML not at all (D3.5). Checking an export with our own
+parser proves little, so `src/lib/exporters.tools.test.ts` writes real files and
+reads them back with **ffmpeg's LRC demuxer** (converted to SRT: every cue time,
+the blank stamp that closes a gap, untimed lines left out) and **xmllint**
+(well-formed TTML, namespaced title, escaped text, one `<p>` per timed line).
+Both are skipped with the reason shown when the tool is not installed — the
+README promises "Node and pnpm, nothing else" — and that skip was verified with
+a PATH holding only node.
+**D16.2 — TTML fix found by that check:** the title was a bare `<title>` inside
+`<metadata>`; TTML puts metadata in the `ttm` namespace. It is now `<ttm:title>`
+with `xmlns:ttm` declared. Known limit, stated: LRC stores centiseconds, so
+26.123 s exports as 26.12 s; Apple's own TTML validator is not public, so
+acceptance by Apple Music is not proven, only conformance to the format.
+
+## 17. Resizable side panes (candidate request)
+
+**D17.1 — Lyrics and Inspector panes resize** by dragging the divider next to
+them, or from the keyboard (Tab to the divider, ←/→, Shift for bigger steps);
+double-click restores the default. Widths are clamped (240–600 px lyrics,
+240–520 px inspector), never squeeze the timeline below 360 px, and are
+remembered in this browser (`localStorage`, wrapped so a blocked storage just
+means defaults). The dividers are `role="separator"` with aria values; their
+arrow keys are consumed so they do not also seek the track. Below 1100 px the
+existing stacked layout applies and the dividers are hidden. Verified in a
+browser: drag, keys (track position unchanged), reload, reset, extreme drags.
+
+## 18. Desktop-focused, on purpose (candidate's decision)
+
+**D18.1 — Not a mobile editor.** Measured at 768 px and 390 px: tablet is
+usable but cramped (title collapses, the lyric list is pushed off screen);
+phone is broken (top bar overlaps, timeline ~110 px). The interaction model is
+also desktop by nature — stamping is the Enter key, and list drag-and-drop uses
+native HTML5 DnD, which iOS/Android do not support (block drags on the timeline
+do work with touch). The agent offered two small fixes (stacked narrow layout,
+an on-screen Stamp button); **the candidate chose to keep it desktop-focused**
+and say so, since the README asks for none of it and fine timing on a phone
+waveform is not where the time savings are.
+
+## 19. Final polish (candidate: "professional FE touches — last fixes")
+
+Driven by audits rather than taste:
+- **D19.1 — axe-core** (loaded only into an audit script, not a project
+  dependency) over the editor, the shortcut sheet and the new-track dialog, light
+  and dark. Found: 4 colour-contrast failures in the light theme (orange text and
+  white-on-orange buttons at 3.2:1, warning text at 3.6:1) and 2 scrollable
+  regions not reachable by keyboard (lyric list, timeline). Fixed: text-safe
+  colours (all ≥ 4.5:1, computed), and both scroll areas are focusable with a
+  label. Result: 0 violations in both themes. No console warnings in a full flow;
+  the two "aborted" requests are StrictMode's deliberate double effect and the
+  media element's own range requests.
+- **D19.2 — Error boundary.** A render error now shows "Something went wrong"
+  with Reload instead of a blank page (the D6.2 crash showed what that looks
+  like). Local tracks lose nothing — the unmount flush (D14.1) writes them.
+- **D19.3 — Stored data is validated** before use: a corrupted local track now
+  fails to load with a clear message instead of crashing the editor (found by
+  testing the boundary with a deliberately broken record).
+- **D19.4 — Small things that tell:** the tab title names the song and marks
+  unsaved server edits ("• You Verse You — Lyric Alignment"); a favicon; a meta
+  description; reveal-scrolling respects `prefers-reduced-motion`.
+
+## 20. Visual language from conversion.al (candidate request)
+
+**D20.1 — Inspired by, not copied from, the company site.** Measured from the
+live page (computed styles + screenshots): warm off-white background, near-black
+ink, orange primary, teal stat chips, heavy headings, rounded controls with a
+soft glow, letter-spaced labels, a faint grid. Applied as `tokens.css` (colours,
+light and dark) and `brand.css` (a removable layer loaded last). **Not used:**
+the company's logo or name — a mark of our own (a waveform glyph) sits in the
+top bar; using theirs would be impersonation, not inspiration.
+**D20.2 — Accessibility over fidelity where they conflict.** The site sets
+white text on its bright orange (#f97316, 2.8:1). The editor uses the brand's
+deeper orange (#c2410c, 5.2:1) for anything with text and keeps the bright one
+for glows, tints and onset ticks. The faint grid went where a grid means
+something — the time lane. The karaoke line borrows the site's headline
+treatment (heavy, ink fading to orange). axe: still 0 violations, both themes.
+
+## 21. Light / dark choice in the UI (candidate request)
+
+**D21.1 — A theme button: follow the system → light → dark.** The app only
+followed the OS. Now `data-theme` on `<html>` pins light or dark (absent =
+system), set from a top-bar button (icon shows the current choice, tooltip says
+what a click does) and remembered in this browser. A tiny inline script in
+`index.html` applies the saved choice before first paint, so a dark choice never
+flashes light on reload. Dark tokens apply for `data-theme="dark"`, or for the
+OS preference when nothing is pinned; `color-scheme` follows, so native controls
+match. Verified: cycling, persistence (attribute set before the app mounts),
+and "light" overriding a dark OS.
+**D21.2 — Bug found while verifying: the waveform never used the theme.** A
+`--wave: var(--wave)` rule on the canvas referenced itself, which CSS treats as
+invalid, so the canvas always fell back to `#888`. Removed; the canvas now
+reads the theme's colour and redraws on any theme change (a small
+`useThemeVersion` signal from a MutationObserver plus the OS media query).
+Checked by reading canvas pixels: #a19d94 light, #5b5b66 dark.
+
+## 22. Network layer review (candidate asked: "did you use axios?")
+
+**D22.1 — No axios, on purpose.** The scaffold ships a ~40-line `fetch` wrapper
+(`api.ts`, "already wired" per the README); there are two API endpoints plus
+LRCLIB and the audio file. axios would add a dependency for features not needed
+here (interceptors, transforms, older-browser support). Also considered and
+rejected: TanStack Query — caching and refetching do not apply to one GET and
+one versioned PUT whose conflicts must be decided by the user.
+**D22.2 — What the review found missing, and fixed:**
+- **No time limit.** `fetch` has none, so a server that never answered left a
+  save "Saving…" forever with the Save button locked. Every API call now has a
+  15 s limit (combined with the caller's own abort signal); running out throws
+  `ApiTimeoutError`, which the save turns into "The server did not answer
+  within 15 s… your edits are still here" with Retry. A caller's abort (track
+  switch) stays an abort, not a timeout. Browser-checked: a PUT that never
+  answers gives up at 15.5 s, edits kept, Retry enabled.
+- **No runtime validation.** Responses were trusted via `body as T`. Small
+  hand-written guards in `wire.ts` (`isWireTrack`, `isWireState`, and a 409 is
+  only reconcilable when it carries a usable state) check shape, integer
+  milliseconds and the one float (`duration_seconds`) at the boundary. A
+  malformed GET now shows "The server answered in an unexpected shape" instead
+  of failing later; a malformed save reply is reported, not trusted. Rejected:
+  zod — two shapes do not justify a runtime dependency.
+`api.ts` is scaffold code; the README says "it is your code", and the changes
+keep its contract (ApiError with status and body) intact. 7 new unit tests.
+
+## 23. Loading and empty states (candidate: "check them, skeletons, the modern way")
+
+Measured first, with the track GET delayed 2 s and the audio 3 s:
+- Waiting for the track showed a lone "Loading track…" in an empty page; the
+  whole editor then appeared at once.
+- Waiting for the audio showed "Drawing waveform…" in a corner of an empty wave
+  area (3 s+, and ~3 s of decode for a 20-minute track, §12).
+- Before CSS/JS, the page was the browser's default background (a white flash
+  is possible in dark mode while JS loads — the dev server's unbundled modules
+  made that visible: 8 s blank on a throttled network).
+
+**D23.1 — Skeletons that are the real layout.** `AppSkeleton` renders the
+editor's own grid and pane classes (top bar, lyric rows, ruler + waveform,
+inspector) with fixed widths, using the user's saved pane widths, under
+`role="status"` / `aria-busy`; the waveform area gets bars tinted with the
+waveform colour while audio loads or decodes. Shimmer is slow and stops under
+`prefers-reduced-motion` (global rule). Screen readers still hear the loading
+text (visually hidden).
+**D23.2 — Stated honestly: this is not a CLS fix.** Cumulative Layout Shift was
+already 0 (the loading text was replaced, nothing existing moved) and is still
+0 after, light and dark. The gain is orientation — the user sees where things
+will be from the first frame — not a metric.
+**D23.3 — Theme background before anything loads.** An inline `<style>` in
+`index.html` sets the light or dark background (honouring a saved choice and
+the OS), so there is no white flash before the CSS arrives. Checked: the
+background is the theme colour at DOMContentLoaded in both themes.
+**D23.4 — Left as they are, on purpose:** the lyric lookup keeps its one-line
+"Looking up lyrics…" status (it is fast, and a skeleton inside a text field
+would suggest text that may not come); empty states (no lines yet, nothing
+selected, nothing timed) already say what to do next.
+
+**D23.5 — Timeline cursor (candidate report: "looks like a text cursor").** The
+ruler and waveform had `cursor: text` - an I-beam over something that is not
+text. They now show a pointer (click to seek), and `ew-resize` for the whole
+duration of a scrub, even when the pointer wanders off the timeline (a body
+class set on pointerdown, cleared on release).
+
+**D23.6 — Scrubbing selected text (candidate report).** Dragging along the
+ruler/waveform started a native text selection, highlighting the ruler's
+numbers and nearby labels. The scrub's pointerdown now prevents that default
+(as block drags already did), the timeline content is `user-select: none`
+(nothing there is meant to be copied), and so is the page while a scrub is in
+progress. Preventing the default also stops focus moving, so - as for blocks
+(D14.2) - a half-typed Inspector field is blurred, and committed, first.
+Checked: zero selected characters while scrubbing (also off the timeline) and
+while dragging a block; typed text committed.
+
+## 24. Completeness check (candidate asked: "is everything in decisions?")
+
+Checked by listing every change made in the session against this file. Three
+were missing; they are recorded here as **late entries** — the reasoning is
+what the agent acted on at the time, written down now.
+
+**D24.1 (late entry) — Layout: flex column, not grid rows.** The first layout
+put the top bar, an optional banner, the workspace and the status line in grid
+rows; with no banner, the rows shifted and the status line was pushed off the
+bottom of the screen. Switched to a flex column (found in the first screenshot
+checkpoint).
+
+**D24.2 (late entry) — An untimed field says "untimed".** The Start field of an
+untimed line showed a `0:00.000` placeholder, which read as a real value. It
+now shows "untimed" until there is a time.
+
+**D24.3 (late entry) — Help sheet key caps.** Key caps stretched to the height
+of a wrapped description, turning into tall bars; they now keep their own
+height (`align-items: flex-start`).
+
+**D12.4 — Re-measured on the final UI (2026-10-16),** after the overlays,
+theme, skeletons and network changes, same script (`pnpm measure`):
+
+| | seeded 2:05 / 28 lines | 10× 20:50 / 280 lines |
+| --- | --- | --- |
+| decode / peaks / onsets | 167 / 22 / 1 ms | 1911 / 102 / 6 ms |
+| nudge all lines | 31–34 ms | 34–43 ms |
+| stamp one line | 21–33 ms | 34–57 ms |
+| playback frame p95, CPU 1× / 4× | 17.2 / 17.5 ms, no long tasks | 17.4 / 17.5 ms, no long tasks |
+
+The §12 conclusions still hold; nothing added since made playback or edits
+slower (the 10× edits are slightly faster than the first measurement).
+
+**D15.3 — Selection scope at the foot of the Inspector (candidate request).**
+As in the sketch: "2 segments selected — edits apply to both" ("N lines
+selected — edits apply to all N" when some are untimed), pinned to the bottom of
+the pane; the same sentence was removed from the top so it is not said twice.
+Kept different from the sketch on purpose (candidate's call): no drag shadow,
+no "Zoom" text label, durations and list times with milliseconds.
+Follow-up (candidate report): the heading still said "2 lines selected" above a
+footnote saying "2 segments selected". Both now use one word — "segments" when
+every selected line is timed, "lines" otherwise; the Delete button keeps
+"lines" because it deletes lines.
+Final wording (candidate: "decide"): **"lines" everywhere** — the Inspector
+heading, its footnote, the Delete button and the lane frame all say "N lines
+selected". A selection is always of lines (some may be untimed), and "Delete
+2 segments" would wrongly suggest only the timing goes; "Clear timings" is the
+action for that. The sketch's "segments selected" came from an example where
+every line was timed.

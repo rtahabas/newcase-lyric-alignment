@@ -22,6 +22,8 @@ import { Inspector } from '../components/inspector/Inspector';
 import { Karaoke } from '../components/Karaoke';
 import { StatusLine } from '../components/StatusLine';
 import { HelpOverlay } from '../components/HelpOverlay';
+import { ResizeHandle } from '../ui/ResizeHandle';
+import { PANE_LIMITS, usePaneWidths } from './usePaneWidths';
 
 type Props = {
   track: LoadedTrack;
@@ -38,6 +40,7 @@ export function Editor({ track, trackMenu, modalOpen, onDirtyChange }: Props) {
   );
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const [helpOpen, setHelpOpen] = useState(false);
+  const panes = usePaneWidths();
   const [snapOn, setSnapOn] = useState(true);
   const wave = useWaveform(track.meta.audioUrl);
   const onsets = useMemo(
@@ -49,6 +52,10 @@ export function Editor({ track, trackMenu, modalOpen, onDirtyChange }: Props) {
   useEffect(() => {
     onDirtyChange(unsaved);
   }, [onDirtyChange, unsaved]);
+  // The tab says which song is open and whether it has unsaved server edits.
+  useEffect(() => {
+    document.title = `${unsaved ? '• ' : ''}${track.meta.title} — Lyric Alignment`;
+  }, [unsaved, track.meta.title]);
 
   // The audio's own duration is the truth; the source's claim only fills the gap until it loads.
   const durationMs = playerState.durationMs ?? track.meta.durationMs;
@@ -75,12 +82,36 @@ export function Editor({ track, trackMenu, modalOpen, onDirtyChange }: Props) {
           onHelp={() => setHelpOpen(true)}
         />
         <SyncBanner sync={sync} playerError={playerState.error} />
-        <main className="workspace">
+        <main
+          className="workspace"
+          style={{
+            ['--lyrics-w' as string]: `${panes.widths.lyrics}px`,
+            ['--inspector-w' as string]: `${panes.widths.inspector}px`,
+          }}
+        >
           <LyricsPane />
+          <ResizeHandle
+            label="Resize lyrics pane"
+            testId="resize-lyrics"
+            value={panes.widths.lyrics}
+            {...PANE_LIMITS.lyrics}
+            direction={1}
+            onResize={(px) => panes.resize('lyrics', px)}
+            onReset={() => panes.reset('lyrics')}
+          />
           <section className="stage" aria-label="Timeline">
             <Timeline wave={wave} />
             <Karaoke />
           </section>
+          <ResizeHandle
+            label="Resize inspector pane"
+            testId="resize-inspector"
+            value={panes.widths.inspector}
+            {...PANE_LIMITS.inspector}
+            direction={-1}
+            onResize={(px) => panes.resize('inspector', px)}
+            onReset={() => panes.reset('inspector')}
+          />
           <Inspector />
         </main>
         <StatusLine />

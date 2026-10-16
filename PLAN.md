@@ -121,7 +121,20 @@ Decisions made along the way go to `decisions.md`, not here.
 - [x] 13.1 `NOTES.md` draft for the candidate to own (marked DRAFT — candidate rewrites in their own words): path chosen and why, skipped, surprises
 - [x] 13.2 `decisions.md` final pass (no reconstruction — only gaps flagged)
 
+### 13b. Code review fixes (candidate ran /code-review high)
+- [x] 13b.1 15 findings fixed (decisions.md §14), 5 new unit tests
+- [x] 13b.2 17-step browser check of the fixes + 35-step regression + `pnpm check` / `pnpm test` / `pnpm build`
+
+### 13c. Wireframe alignment (candidate request)
+- [x] 13c.1 Visible trim handles, playhead grip, placed/unplaced list contrast
+- [x] 13c.2 Snap guide line + origin ghost + “N segments selected” frame while dragging/selecting
+- [x] 13c.3 Lyrics pane: open paste box, “Add all lines”, “+ Add line”, “LINES · N / M placed”
+- [x] 13c.4 Top bar “Load song” + “Export LRC”; Inspector “Segment” layout with duration box
+
+### 13d. Scope decisions
+- [x] 13d.1 Desktop-focused, not a mobile editor (candidate's decision, decisions.md D18.1; NOTES.md)
+
 ### 14. Verification
 - [x] 14.1 `pnpm check`, `pnpm test`, `pnpm build` all green
 - [~] 14.2 Manual run in a browser — agent: scripted browser runs + screenshots throughout; candidate: by hand
-- [ ] 14.3 Candidate aligns a second real song by ear before submitting (candidate only)
+- [x] 14.3 Candidate aligned a second real song of their own (reported 2026-10-16)

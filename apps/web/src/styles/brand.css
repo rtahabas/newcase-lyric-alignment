@@ -1,0 +1,88 @@
+/*
+ * Brand layer, loaded last: the visual language of conversion.al applied to the
+ * editor - heavy headings, rounded controls, a soft glow on primary actions,
+ * teal "metric" pills, tinted cards, a faint grid. Remove this file and the
+ * editor falls back to its neutral look; no layout depends on it.
+ */
+h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+button,
+.btn {
+  border-radius: var(--radius);
+}
+.btn-primary,
+.btn-play {
+  font-weight: 700;
+  box-shadow: 0 8px 20px -8px var(--accent-glow);
+}
+.btn-primary:hover:not(:disabled),
+.btn-play:hover:not(:disabled) {
+  box-shadow: 0 10px 24px -8px var(--accent-glow);
+}
+.topbar {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+/* A small mark before the track menu (our own waveform glyph, not a company logo). */
+.topbar__track::before {
+  content: '';
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-bright)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M7 20v-8M11 23V9M15 18v-4M19 21v-10M23 17v-2' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / 22px no-repeat;
+  box-shadow: 0 6px 16px -6px var(--accent-glow);
+}
+/* "Metric" pill, like the site's teal stat chips. */
+.pill {
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--timed) 32%, transparent);
+  background: color-mix(in srgb, var(--timed) 9%, var(--surface));
+  color: var(--timed);
+  font-weight: 700;
+}
+.pane__intro {
+  border: 1px solid color-mix(in srgb, var(--accent-bright) 30%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent-bright) 7%, var(--surface));
+}
+.lyric {
+  border-radius: var(--radius);
+}
+/* The site's faint grid, where a grid means something: the time lane. */
+.lane {
+  background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+/* The line being sung, set like the site's headlines: heavy, ink fading to orange. */
+.karaoke__now {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, var(--text) 35%, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.karaoke__now--idle {
+  background: none;
+  color: var(--untimed);
+}
+.menu,
+.modal {
+  border-radius: 14px;
+}
+.modal {
+  box-shadow: 0 24px 60px -20px rgb(10 10 20 / 0.35);
+}
+/* Focusable scroll areas (lists, timeline): a quiet inset ring, since the
+   focused row or block already shows its own focus. */
+.lyrics__list:focus-visible,
+.timeline__scroller:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--select) 35%, transparent);
+  outline-offset: -2px;
+}

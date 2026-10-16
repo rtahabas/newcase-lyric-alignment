@@ -6,6 +6,7 @@ import { NewTrackDialog } from './components/tracks/NewTrackDialog';
 import { ConfirmDiscard } from './components/tracks/ConfirmDiscard';
 import { useFileDrop } from './components/tracks/useFileDrop';
 import { localKey } from './sources/local';
+import { AppSkeleton } from './components/AppSkeleton';
 
 /**
  * Picks the track, loads it, and hands it to the editor. Also owns "bring your
@@ -50,7 +51,7 @@ export default function App() {
           onDirtyChange={onDirtyChange}
         />
       )}
-      {state.status === 'loading' && <p className="splash">Loading track…</p>}
+      {state.status === 'loading' && <AppSkeleton />}
       {state.status === 'error' && (
         <div className="splash" role="alert">
           <h1>Could not load the track</h1>

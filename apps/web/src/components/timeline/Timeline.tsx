@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { useEditor } from '../../app/EditorContext';
 import type { WaveformState } from '../../audio/useWaveform';
@@ -10,6 +10,8 @@ import { useViewport } from './useViewport';
 import { useZoomBehaviour } from './useZoomBehaviour';
 import { useRevealFocus } from './useRevealFocus';
 import { msToPx, pxToMs } from './scale';
+import { Skeleton } from '../../ui/Skeleton';
+import { WaveSkeleton } from '../AppSkeleton';
 
 const WAVE_HEIGHT = 120;
 
@@ -18,17 +20,29 @@ export function Timeline({ wave }: { wave: WaveformState }) {
   const { player, durationMs, zoom, setZoom, onsets, snapOn } = useEditor();
   const scroller = useRef<HTMLDivElement>(null);
   const view = useViewport(scroller);
+  // While scrubbing, the view holds still so the time under the pointer stays put.
+  const [scrubbing, setScrubbing] = useState(false);
   useZoomBehaviour(scroller, zoom, setZoom, player);
   useRevealFocus(scroller);
 
   /** Click (or press-and-drag) on the ruler or waveform scrubs the playhead. */
   const scrub = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    const box = e.currentTarget.getBoundingClientRect();
-    const seekTo = (clientX: number) => player.seek(pxToMs(clientX - box.left, zoom));
+    // No text selection while scrubbing (the ruler's numbers were getting selected);
+    // preventing it also keeps focus where it is, so commit any half-typed field first.
+    e.preventDefault();
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const area = e.currentTarget;
+    setScrubbing(true);
+    document.body.classList.add('is-scrubbing');
+    // Measured on every move: the view may scroll under the pointer (playhead follow).
+    const seekTo = (clientX: number) =>
+      player.seek(pxToMs(clientX - area.getBoundingClientRect().left, zoom));
     seekTo(e.clientX);
     const move = (ev: globalThis.PointerEvent) => seekTo(ev.clientX);
     const up = () => {
+      setScrubbing(false);
+      document.body.classList.remove('is-scrubbing');
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
@@ -41,10 +55,28 @@ export function Timeline({ wave }: { wave: WaveformState }) {
   // The scroller is always mounted so the viewport is measured from the first frame.
   return (
     <div className="timeline">
-      <div ref={scroller} className="timeline__scroller" data-testid="timeline">
-        {durationMs === null && <p className="muted timeline__loading">Loading audio…</p>}
+      <div
+        ref={scroller}
+        className="timeline__scroller"
+        data-testid="timeline"
+        // Scrollable, so reachable by keyboard (axe: scrollable-region-focusable).
+        tabIndex={0}
+        role="region"
+        aria-label="Timeline: waveform and timed lines"
+      >
+        {durationMs === null && (
+          <div className="timeline__skeleton" role="status">
+            <Skeleton h={24} />
+            <WaveSkeleton />
+            <span className="visually-hidden">Loading audio…</span>
+          </div>
+        )}
         {durationMs !== null && (
-          <div className="timeline__content" style={{ width: msToPx(durationMs, zoom) }}>
+          <div
+            className="timeline__content"
+            // The snap guide reaches up through the ruler and waveform above the lane.
+            style={{ width: msToPx(durationMs, zoom), ['--wave-h' as string]: `${WAVE_HEIGHT}px` }}
+          >
             <div
               className="timeline__scrub"
               onPointerDown={scrub}
@@ -61,17 +93,20 @@ export function Timeline({ wave }: { wave: WaveformState }) {
                     view={view}
                     height={WAVE_HEIGHT}
                   />
+                ) : wave.status === 'loading' ? (
+                  <span className="wave__loading" role="status">
+                    <WaveSkeleton />
+                    <span className="visually-hidden">Drawing waveform…</span>
+                  </span>
                 ) : (
                   <span className="wave__status muted small">
-                    {wave.status === 'loading'
-                      ? 'Drawing waveform…'
-                      : `No waveform: ${wave.reason}. Playback still works.`}
+                    No waveform: {wave.reason}. Playback still works.
                   </span>
                 )}
               </div>
             </div>
-            <SegmentLane />
-            <Playhead player={player} zoom={zoom} scroller={scroller} follow />
+            <SegmentLane viewLeft={view.left} />
+            <Playhead player={player} zoom={zoom} scroller={scroller} follow={!scrubbing} />
           </div>
         )}
       </div>

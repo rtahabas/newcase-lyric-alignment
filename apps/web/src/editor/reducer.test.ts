@@ -49,6 +49,17 @@ describe('editorReducer', () => {
     expect(s.selection.focus).toBe('2');
   });
 
+  it('re-stamping a start keeps the end, and the next stamp does not pull it', () => {
+    let s = editorReducer(loaded(), { type: 'stamp', t: 1000 });
+    s = editorReducer(s, { type: 'stamp', t: 3000 });
+    s = editorReducer(s, { type: 'stampEnd', t: 4500 }); // line 2: 3000-4500, deliberately trimmed
+    s = editorReducer(s, { type: 'select', selection: { ids: ['2'], anchor: '2', focus: '2' } });
+    s = editorReducer(s, { type: 'stamp', t: 3200 }); // fix line 2's start
+    expect(s.doc.segments['2']).toEqual({ startMs: 3200, endMs: 4500 });
+    s = editorReducer(s, { type: 'stamp', t: 9000 }); // line 3
+    expect(s.doc.segments['2'].endMs).toBe(4500);
+  });
+
   it('records nothing for an edit that changes nothing', () => {
     const s = loaded();
     const next = editorReducer(s, { type: 'edit', label: 'noop', apply: (d) => d });

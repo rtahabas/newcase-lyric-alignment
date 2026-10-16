@@ -119,3 +119,19 @@
 .lyric__time kbd {
   font-size: 0.65rem;
 }
+/* Wireframe alignment: placed lines recede, lines still to place stand out. */
+.lyric--timed .lyric__text {
+  color: var(--muted);
+}
+.lyric--untimed {
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-weight: 550;
+}
+.lines-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}

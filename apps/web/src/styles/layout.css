@@ -54,7 +54,8 @@
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr) 290px;
+  /* Side panes are resizable (usePaneWidths); the handles sit between them. */
+  grid-template-columns: var(--lyrics-w, 340px) 6px minmax(0, 1fr) 6px var(--inspector-w, 290px);
   min-height: 0;
 }
 .pane {
@@ -66,10 +67,9 @@
   background: var(--surface);
 }
 .lyrics {
-  border-right: 1px solid var(--border);
+  border-right: 0; /* the resize handle is the divider */
 }
 .inspector {
-  border-left: 1px solid var(--border);
   overflow-y: auto;
 }
 .pane__header {
@@ -124,6 +124,12 @@
 @media (max-width: 1100px) {
   .workspace {
     grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .resize-handle {
+    display: none;
+  }
+  .lyrics {
+    border-right: 1px solid var(--border);
   }
   .inspector {
     grid-column: 1 / -1;

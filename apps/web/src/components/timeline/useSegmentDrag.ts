@@ -7,9 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useEditor } from '../../app/EditorContext';
 import type { DragOp } from '../../editor/drag';
-import { applyDrag, snapMove, snapTargets, snapTime, touchingNeighbour } from '../../editor/drag';
+import { applyDrag, dragLabel, snapMove, snapTargets, snapTime, touchingNeighbour } from '../../editor/drag';
 import { click } from '../../editor/selection';
-import { formatMs } from '../../lib/time';
 import { useLatest } from '../../lib/useLatest';
 import { pxToMs, SNAP_PX } from './scale';
 
@@ -26,17 +25,11 @@ type Gesture = {
 
 const DRAG_THRESHOLD_PX = 3;
 
-function label(op: DragOp, lineNo: (id: string) => number): string {
-  if (op.kind === 'move') {
-    const what = op.ids.length === 1 ? `line ${lineNo(op.ids[0])}` : `${op.ids.length} lines`;
-    return `Move ${what} ${op.deltaMs >= 0 ? '+' : '−'}${formatMs(Math.abs(op.deltaMs))}`;
-  }
-  return `Trim line ${lineNo(op.id)} ${op.edge} to ${formatMs(op.t)}`;
-}
-
 export function useSegmentDrag() {
   const { editor, dispatch, player, zoom, durationMs } = useEditor();
   const [op, setOp] = useState<DragOp | null>(null);
+  /** Where the dragged edge snapped, for the guide line; null when it did not. */
+  const [snapAt, setSnapAt] = useState<number | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const latest = useLatest({ editor, zoom, durationMs });
 
@@ -44,7 +37,10 @@ export function useSegmentDrag() {
     (e: ReactPointerEvent, id: string, part: BlockPart) => {
       if (e.button !== 0) return;
       e.stopPropagation();
-      e.preventDefault();
+      e.preventDefault(); // no text selection while dragging - but that also stops focus moving, so:
+      // commit a half-typed Inspector field (they commit on blur) before the selection
+      // change unmounts it.
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       const { selection, doc } = latest.current.editor;
       const mods = { shift: e.shiftKey, toggle: e.metaKey || e.ctrlKey };
       const keep = part === 'body' && selection.ids.includes(id) && !mods.shift && !mods.toggle;
@@ -63,9 +59,10 @@ export function useSegmentDrag() {
   );
 
   useEffect(() => {
-    const show = (g: Gesture, next: DragOp | null) => {
+    const show = (g: Gesture, next: DragOp | null, at: number | null = null) => {
       g.op = next;
       setOp(next);
+      setSnapAt(at);
     };
     const move = (e: PointerEvent) => {
       const g = gesture.current;
@@ -79,8 +76,8 @@ export function useSegmentDrag() {
       const threshold = free ? 0 : pxToMs(SNAP_PX, z);
       const playhead = player.timeMs();
       if (g.part === 'body') {
-        const delta = snapMove(doc, g.ids, pxToMs(dx, z), snapTargets(doc, g.ids, playhead), threshold, dur);
-        show(g, { kind: 'move', ids: g.ids, deltaMs: delta });
+        const snap = snapMove(doc, g.ids, pxToMs(dx, z), snapTargets(doc, g.ids, playhead), threshold, dur);
+        show(g, { kind: 'move', ids: g.ids, deltaMs: snap.deltaMs }, snap.snapAt);
         return;
       }
       const seg = doc.segments[g.id];
@@ -89,7 +86,7 @@ export function useSegmentDrag() {
       const neighbour = touchingNeighbour(doc, g.id, edge);
       const raw = (edge === 'start' ? seg.startMs : seg.endMs) + pxToMs(dx, z);
       const t = snapTime(raw, snapTargets(doc, neighbour ? [g.id, neighbour] : [g.id], playhead), threshold);
-      show(g, { kind: 'trim', id: g.id, edge, t, linked: !free });
+      show(g, { kind: 'trim', id: g.id, edge, t, linked: !free }, t !== raw ? t : null);
     };
     const up = () => {
       const current = gesture.current?.op;
@@ -99,14 +96,16 @@ export function useSegmentDrag() {
       const lineNo = (id: string) => ed.doc.lines.findIndex((l) => l.id === id) + 1;
       dispatch({
         type: 'edit',
-        label: label(current, lineNo),
+        label: dragLabel(current, lineNo),
         apply: (d, dur) => applyDrag(d, current, dur),
       });
       setOp(null);
+      setSnapAt(null);
     };
     const abort = () => {
       gesture.current = null;
       setOp(null);
+      setSnapAt(null);
     };
     const cancel = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gesture.current) abort();
@@ -124,5 +123,5 @@ export function useSegmentDrag() {
   }, [dispatch, player, latest]);
 
   const preview = op ? applyDrag(editor.doc, op, durationMs) : editor.doc;
-  return { preview, dragging: op !== null, onPointerDown };
+  return { preview, op, snapAt, onPointerDown };
 }

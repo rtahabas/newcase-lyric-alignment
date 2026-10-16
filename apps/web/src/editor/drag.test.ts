@@ -37,7 +37,7 @@ describe('snapping', () => {
   });
 
   it('snaps a moved block by whichever outer edge is closer', () => {
-    expect(snapMove(doc, ['c'], -1990, [3000], 50, 60_000)).toBe(-2000);
-    expect(snapMove(doc, ['c'], -500, [3000], 50, 60_000)).toBe(-500);
+    expect(snapMove(doc, ['c'], -1990, [3000], 50, 60_000)).toEqual({ deltaMs: -2000, snapAt: 3000 });
+    expect(snapMove(doc, ['c'], -500, [3000], 50, 60_000)).toEqual({ deltaMs: -500, snapAt: null });
   });
 });

@@ -58,4 +58,9 @@ describe('parseLyricSheet', () => {
     const sheet = '[Chorus]\nYou verse you\n\n(Verse 2)\n# verse\nYou verse you\nHold on (hold on)\n';
     expect(parseLyricSheet(sheet)).toEqual(['You verse you', 'You verse you', 'Hold on (hold on)']);
   });
+
+  it('keeps a sung line in parentheses, drops only label-like ones', () => {
+    const sheet = '(Ooh, baby, baby)\n(Chorus x2)\n(x2)\n(Hold me closer)\n(Pre-Chorus)';
+    expect(parseLyricSheet(sheet)).toEqual(['(Ooh, baby, baby)', '(Hold me closer)']);
+  });
 });

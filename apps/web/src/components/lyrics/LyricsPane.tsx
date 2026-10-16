@@ -35,11 +35,14 @@ export function LyricsPane() {
     <aside className="pane lyrics" aria-label="Lyrics">
       <header className="pane__header">
         <h2>Lyrics</h2>
-        <span className={`pill ${placed === doc.lines.length && placed > 0 ? 'pill--ok' : ''}`}>
-          {placed} of {doc.lines.length} placed
-        </span>
       </header>
-      <SheetInput startOpen={doc.lines.length === 0} />
+      <SheetInput />
+      <div className="lines-head" data-testid="lines-head">
+        <span>Lines · {doc.lines.length}</span>
+        <span className={placed === doc.lines.length && placed > 0 ? 'save-state--ok' : ''}>
+          {placed} placed
+        </span>
+      </div>
       <TimingPrompt />
       {doc.lines.length === 0 ? (
         <p className="muted empty">No lines yet. Paste a lyric sheet above.</p>
@@ -50,6 +53,8 @@ export function LyricsPane() {
           role="listbox"
           aria-multiselectable
           aria-label="Lyric lines"
+          // Scrollable, so it must be reachable by keyboard; ↑/↓ then move between lines.
+          tabIndex={0}
         >
           {doc.lines.map((line, i) => (
             <LyricRow
@@ -67,8 +72,8 @@ export function LyricsPane() {
         </ol>
       )}
       <p className="muted small pane__hint">
-        Drag a line onto the timeline to place it, onto another line to merge. Double-click a line to jump to
-        it.
+        Drag a line onto the timeline to place it, onto a neighbouring line to merge. Double-click a line to
+        jump to it.
       </p>
     </aside>
   );

@@ -24,7 +24,7 @@ const FORMATS = [
   },
 ] as const;
 
-/** Export dropdown; reports how many untimed lines were left out. */
+/** "Export LRC" in one click (as in the wireframe), other formats behind the chevron. */
 export function ExportMenu({ meta }: { meta: TrackMeta }) {
   const { editor, durationMs } = useEditor();
   const [note, setNote] = useState<string | null>(null);
@@ -37,21 +37,26 @@ export function ExportMenu({ meta }: { meta: TrackMeta }) {
 
   return (
     <>
-      <Menu.Root>
-        <Menu.Trigger className="btn">
-          <Download size={16} /> Export <ChevronDown size={14} />
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Content className="menu" align="end" sideOffset={6}>
-            {FORMATS.map((f) => (
-              <Menu.Item key={f.id} className="menu__item" onSelect={() => run(f)}>
-                <strong>{f.label}</strong>
-                <span className="muted small">{f.hint}</span>
-              </Menu.Item>
-            ))}
-          </Menu.Content>
-        </Menu.Portal>
-      </Menu.Root>
+      <div className="split-btn" role="group" aria-label="Export">
+        <button onClick={() => run(FORMATS[0])} data-testid="export-lrc">
+          <Download size={16} /> Export LRC
+        </button>
+        <Menu.Root>
+          <Menu.Trigger className="btn" aria-label="More export formats">
+            <ChevronDown size={14} />
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Content className="menu" align="end" sideOffset={6}>
+              {FORMATS.map((f) => (
+                <Menu.Item key={f.id} className="menu__item" onSelect={() => run(f)}>
+                  <strong>{f.label}</strong>
+                  <span className="muted small">{f.hint}</span>
+                </Menu.Item>
+              ))}
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
+      </div>
       {note && (
         <span className="muted small" role="status">
           {note}

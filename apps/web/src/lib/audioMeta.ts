@@ -12,8 +12,14 @@ const plain = (b: Uint8Array, o: number) =>
   ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0;
 
 function frameText(body: Uint8Array): string {
-  const label = decoders[body[0]] ?? 'latin1';
-  return new TextDecoder(label).decode(body.subarray(1)).replace(/\0+$/g, '').split('\0')[0].trim();
+  let label = decoders[body[0]] ?? 'latin1';
+  let text = body.subarray(1);
+  // Encoding 1 is "UTF-16 with BOM": the BOM, not a fixed default, decides the byte order.
+  if (body[0] === 1 && text.length >= 2 && text[0] === 0xfe && text[1] === 0xff) {
+    label = 'utf-16be';
+    text = text.subarray(2);
+  }
+  return new TextDecoder(label).decode(text).replace(/\0+$/g, '').split('\0')[0].trim();
 }
 
 /** Reads TIT2 (title) and TPE1 (artist) from an ID3v2.3/2.4 tag. Returns null without a tag. */

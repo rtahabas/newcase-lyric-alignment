@@ -44,3 +44,48 @@
   margin: 4px 0;
   background: var(--border);
 }
+.split-btn {
+  display: inline-flex;
+}
+.split-btn > :first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.split-btn > :last-child {
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 6px 8px;
+}
+.resize-handle {
+  position: relative;
+  cursor: col-resize;
+  /* Draws as a 1px rule; the 6px column (and ::after) is the grab area. */
+  background: linear-gradient(
+    to right,
+    transparent 2.5px,
+    var(--border) 2.5px,
+    var(--border) 3.5px,
+    transparent 3.5px
+  );
+  touch-action: none;
+}
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: 0 -4px; /* a wider grab area than the 6px it draws */
+}
+.resize-handle:hover,
+.resize-handle:focus-visible {
+  background: var(--select);
+}
+body.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+/* While scrubbing, keep the drag cursor even when the pointer leaves the ruler. */
+body.is-scrubbing,
+body.is-scrubbing * {
+  cursor: ew-resize !important;
+  user-select: none;
+}

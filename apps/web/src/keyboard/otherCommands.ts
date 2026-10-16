@@ -98,14 +98,6 @@ export const SELECT_EDIT_COMMANDS: Command[] = [
     match: (e) => isMod(e) && ((e.shiftKey && e.key.toLowerCase() === 'z') || e.key === 'y'),
     run: (c) => c.dispatch({ type: 'redo' }),
   },
-  {
-    group: 'Edit',
-    keys: ['⌘', 'S'],
-    label: 'Save',
-    match: key('s', { mod: true }),
-    run: (c) => c.save(),
-    once: true,
-  },
 ];
 
 export const VIEW_COMMANDS: Command[] = [

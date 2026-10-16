@@ -25,7 +25,7 @@ export function TrackMenu({ currentKey, projects, onOpen, onNew, onDeleted }: Pr
     <>
       <Menu.Root>
         <Menu.Trigger className="btn" data-testid="track-menu">
-          <ListMusic size={16} /> Tracks <ChevronDown size={14} />
+          <ListMusic size={16} /> Load song <ChevronDown size={14} />
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Content className="menu" align="start" sideOffset={6}>

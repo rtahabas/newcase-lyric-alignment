@@ -4,6 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lyric Alignment</title>
+    <style>
+      /* The theme's background before any CSS or JS has loaded: no white flash in dark mode. */
+      html {
+        background: #f8f7f4;
+      }
+      html[data-theme='dark'] {
+        background: #0f0f14;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme]) {
+          background: #0f0f14;
+        }
+      }
+    </style>
+    <script>
+      // Apply a saved light/dark choice before first paint, so the page never flashes the other theme.
+      try {
+        const t = localStorage.getItem('lyric-align:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
+    <meta name="description" content="Time a song's lyrics against its audio." />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a8560e'/%3E%3Cpath d='M7 20v-8M11 23V9M15 18v-4M19 21v-10M23 17v-2' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
   </head>
   <body>
     <div id="root"></div>

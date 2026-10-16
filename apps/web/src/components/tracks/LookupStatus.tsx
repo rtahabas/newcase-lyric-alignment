@@ -9,6 +9,7 @@ type Props = {
   lookup: LookupState;
   origin: SheetOrigin;
   title: string;
+  artist: string;
   durationMs: Ms | null;
   onUse: (c: LyricsCandidate) => void;
   onRetry: () => void;
@@ -20,7 +21,7 @@ const describe = (c: LyricsCandidate) =>
     .join(' · ');
 
 /** What the lookup found, in words, plus the other matches to pick from. */
-export function LookupStatus({ lookup, origin, title, durationMs, onUse, onRetry }: Props) {
+export function LookupStatus({ lookup, origin, title, artist, durationMs, onUse, onRetry }: Props) {
   if (lookup.status === 'idle') return null;
   if (lookup.status === 'searching') {
     return (
@@ -51,7 +52,7 @@ export function LookupStatus({ lookup, origin, title, durationMs, onUse, onRetry
   const current = origin.kind === 'lookup' ? origin.candidate.id : null;
   const others = candidates.filter((c) => c.id !== current);
   if (others.length === 0) return null;
-  const confident = isConfident(candidates[0], title, durationMs);
+  const confident = isConfident(candidates[0], title, artist, durationMs);
   const list = (
     <ul className="lookup__list">
       {others.slice(0, 4).map((c) => (
@@ -78,7 +79,7 @@ export function LookupStatus({ lookup, origin, title, durationMs, onUse, onRetry
       <span className="muted small">
         {confident
           ? 'Matches found:'
-          : 'Possible matches (none has your title or your audio’s length — check before using):'}
+          : 'Possible matches (none has your title and artist, or your audio’s length — check before using):'}
       </span>
       {list}
     </div>

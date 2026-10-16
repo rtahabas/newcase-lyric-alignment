@@ -5,6 +5,7 @@
  */
 import type { Doc } from '../editor/types';
 import { replaceSheet } from '../editor/lines';
+import { shortId } from '../lib/ids';
 import type { LoadedTrack, SaveOutcome, TrackMeta } from './types';
 import { deleteAudio, getAudio, putAudio } from './audioStore';
 
@@ -45,7 +46,7 @@ export type NewLocalTrack = {
 };
 
 export async function createLocalTrack(input: NewLocalTrack): Promise<LocalProject> {
-  const id = crypto.randomUUID().slice(0, 8);
+  const id = shortId();
   const audio: AudioRef =
     typeof input.audio === 'string'
       ? { kind: 'url', url: input.audio }
@@ -67,6 +68,20 @@ export async function createLocalTrack(input: NewLocalTrack): Promise<LocalProje
 }
 
 /** Loads a local track. A blob: URL is created for file audio; the caller revokes it. */
+/** Stored data can be stale or hand-edited; only a well-formed Doc is trusted. */
+function readDoc(id: string): Doc {
+  const raw = readJson<unknown>(docKey(id), null);
+  const d = raw as Partial<Doc> | null;
+  const ok =
+    !!d &&
+    Array.isArray(d.lines) &&
+    d.lines.every((l) => typeof l?.id === 'string' && typeof l?.text === 'string') &&
+    typeof d.segments === 'object' &&
+    d.segments !== null;
+  if (!ok) throw new Error('The saved lines for this track are unreadable; delete it and add it again.');
+  return d as Doc;
+}
+
 export async function loadLocalTrack(id: string): Promise<LoadedTrack> {
   const project = listLocalProjects().find((p) => p.id === id);
   if (!project) throw new Error('That track is no longer stored in this browser.');
@@ -86,7 +101,7 @@ export async function loadLocalTrack(id: string): Promise<LoadedTrack> {
     audioUrl,
     durationMs: null,
   };
-  return { meta, doc: readJson<Doc>(docKey(id), { lines: [], segments: {} }), version: 0 };
+  return { meta, doc: readDoc(id), version: 0 };
 }
 
 export function saveLocalTrack(id: string, doc: Doc, version: number): SaveOutcome {

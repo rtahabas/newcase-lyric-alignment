@@ -12,6 +12,8 @@ export type Probe =
  * Asks the browser whether it can actually play this audio, before a track is
  * created around it. Reads metadata only; nothing is decoded or uploaded.
  */
+const URL_DEBOUNCE_MS = 500;
+
 export function useAudioProbe(source: File | string | null): Probe {
   const [probe, setProbe] = useState<Probe>({ status: 'idle' });
 
@@ -20,7 +22,8 @@ export function useAudioProbe(source: File | string | null): Probe {
       setProbe({ status: 'idle' });
       return;
     }
-    const url = typeof source === 'string' ? source : URL.createObjectURL(source);
+    const isUrl = typeof source === 'string';
+    const url = isUrl ? source : URL.createObjectURL(source);
     const audio = new Audio();
     audio.preload = 'metadata';
     setProbe({ status: 'checking' });
@@ -32,12 +35,15 @@ export function useAudioProbe(source: File | string | null): Probe {
       setProbe({ status: 'bad', reason: 'This browser cannot play that audio (format or address).' });
     audio.addEventListener('loadedmetadata', ok);
     audio.addEventListener('error', bad);
-    audio.src = url;
+    // A picked file is checked at once; a URL waits until typing pauses, so a
+    // half-typed address does not fire a request (and an error) per keystroke.
+    const timer = window.setTimeout(() => (audio.src = url), isUrl ? URL_DEBOUNCE_MS : 0);
     return () => {
+      window.clearTimeout(timer);
       audio.removeEventListener('loadedmetadata', ok);
       audio.removeEventListener('error', bad);
       audio.removeAttribute('src');
-      if (typeof source !== 'string') URL.revokeObjectURL(url);
+      if (!isUrl) URL.revokeObjectURL(url);
     };
   }, [source]);
 

@@ -15,15 +15,18 @@
   padding: 24px;
 }
 .timeline__content {
+  --ruler-h: 24px;
   position: relative;
+  user-select: none; /* nothing to select here; drags must not select labels */
   min-height: 100%;
 }
 .timeline__scrub {
-  cursor: text;
+  /* Click to seek, drag to scrub: a pointer, not a text caret. */
+  cursor: pointer;
 }
 .ruler {
   position: relative;
-  height: 24px;
+  height: var(--ruler-h);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
@@ -43,7 +46,6 @@
   border-bottom: 1px solid var(--border);
 }
 .wave__canvas {
-  --wave: var(--wave);
   position: sticky;
   left: 0;
   display: block;
@@ -130,4 +132,28 @@
 }
 .wave__canvas {
   --onset: var(--accent);
+}
+/* Wireframe alignment: trim handles always visible, a grip on the playhead. */
+.block__handle {
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  box-shadow: inset 2px 0 0 transparent;
+}
+.block__handle::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 12px;
+  margin: 12px auto 0;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 12px;
+  height: 10px;
+  border-radius: 3px 3px 6px 6px;
+  background: var(--accent);
 }

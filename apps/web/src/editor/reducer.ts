@@ -70,7 +70,11 @@ function stamp(s: EditorState, t: Ms, rawMs?: Ms): EditorState {
   const snapped = moved ? ` · snapped ${moved > 0 ? '+' : '−'}${Math.abs(moved)} ms to the onset` : '';
   const label = `Stamp ${lineLabel(doc, id)} at ${formatMs(at)}${snapped}`;
   const next = commit(s, doc, label, single(nextLineId(doc.lines, id) ?? id));
-  return { ...next, openId: id };
+  // Re-stamping a start keeps a good end (stampStart); a kept end is not
+  // provisional, so the next stamp must not pull it.
+  const before = s.doc.segments[id];
+  const keptEnd = !!before && before.endMs === doc.segments[id]?.endMs;
+  return { ...next, openId: keptEnd ? null : id };
 }
 
 function stampLineEnd(s: EditorState, t: Ms): EditorState {

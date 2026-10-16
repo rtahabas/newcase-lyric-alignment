@@ -109,6 +109,7 @@ export function NewTrackDialog({ initialFile, onCancel, onCreated }: Props) {
           sheet={sheet}
           onSheet={setSheet}
           title={title}
+          artist={artist}
           durationMs={durationMs}
           lookup={lookup}
           onRetry={retry}

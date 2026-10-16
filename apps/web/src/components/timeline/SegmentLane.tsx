@@ -9,15 +9,17 @@ import { useLatest } from '../../lib/useLatest';
 import { draggedLineId, isLineDrag } from '../lyrics/lineDrag';
 import { SegmentBlock } from './SegmentBlock';
 import { useSegmentDrag } from './useSegmentDrag';
+import { LaneOverlays } from './LaneOverlays';
 import { msToPx, pxToMs } from './scale';
 
 /** Time under the pointer, from the lane's own box (already offset by scroll). */
 const timeAt = (e: DragEvent<HTMLElement>, zoom: number) =>
   pxToMs(e.clientX - e.currentTarget.getBoundingClientRect().left, zoom);
 
-export function SegmentLane() {
+/** `viewLeft`: the scroller's visible left edge, so labels can stay on screen. */
+export function SegmentLane({ viewLeft }: { viewLeft: number }) {
   const { editor, dispatch, player, zoom, durationMs } = useEditor();
-  const { preview, onPointerDown } = useSegmentDrag();
+  const { preview, op, snapAt, onPointerDown } = useSegmentDrag();
   const [dropAt, setDropAt] = useState<number | null>(null);
   const warnings = useMemo(() => lineWarnings(preview, durationMs), [preview, durationMs]);
   const selected = useMemo(() => new Set(editor.selection.ids), [editor.selection.ids]);
@@ -80,6 +82,15 @@ export function SegmentLane() {
           />
         );
       })}
+      <LaneOverlays
+        doc={editor.doc}
+        preview={preview}
+        selectedIds={editor.selection.ids}
+        op={op}
+        snapAt={snapAt}
+        zoom={zoom}
+        viewLeft={viewLeft}
+      />
       {dropAt !== null && (
         <div className="lane__drop" style={{ transform: `translateX(${msToPx(dropAt, zoom)}px)` }} />
       )}

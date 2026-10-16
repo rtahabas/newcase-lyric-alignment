@@ -32,6 +32,18 @@ describe('parseId3', () => {
     });
   });
 
+  it('honours a big-endian BOM in UTF-16 text (encoding 1)', () => {
+    const be = (t: string) => [...t].flatMap((ch) => [ch.charCodeAt(0) >> 8, ch.charCodeAt(0) & 255]);
+    const body = new Uint8Array([1, 0xfe, 0xff, ...be('Gül')]);
+    const frame = new Uint8Array(10 + body.length);
+    frame.set(new TextEncoder().encode('TIT2'), 0);
+    new DataView(frame.buffer).setUint32(4, body.length);
+    frame.set(body, 10);
+    const size = frame.length;
+    const tag = new Uint8Array([0x49, 0x44, 0x33, 3, 0, 0, 0, 0, (size >> 7) & 127, size & 127, ...frame]);
+    expect(parseId3(tag)?.title).toBe('Gül');
+  });
+
   it('returns null when there is no tag', () => {
     expect(parseId3(new Uint8Array([0xff, 0xfb, 0x90, 0, 0, 0, 0, 0, 0, 0]))).toBeNull();
   });

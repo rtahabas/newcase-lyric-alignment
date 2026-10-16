@@ -35,6 +35,9 @@ describe('toTtml', () => {
   it('writes line-level TTML with escaped text and W3C clock times', () => {
     const { text } = toTtml(doc, meta);
     expect(text).toContain('itunes:timing="Line"');
+    expect(text).toContain('xmlns:ttm="http://www.w3.org/ns/ttml#metadata"');
+    expect(text).toContain('<ttm:title>Song</ttm:title>');
+    expect(text).not.toContain('<title>');
     expect(text).toContain('<p begin="00:00:01.234" end="00:00:03.000">first &amp; &lt;best&gt;</p>');
     expect(text).toContain('<body dur="00:02:05.000">');
     expect(text).not.toContain('never timed');

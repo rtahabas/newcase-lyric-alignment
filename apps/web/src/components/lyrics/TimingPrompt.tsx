@@ -24,14 +24,23 @@ export function TimingPrompt() {
     player.play();
   };
 
+  // Once a pass is under way the how-to has done its job: keep just the button,
+  // so the list gets the room.
+  if (!fresh) {
+    return (
+      <button className="btn-primary small" onClick={start} data-testid="start-timing">
+        <Play size={14} /> {`Continue from line ${index + 1}`}
+      </button>
+    );
+  }
   return (
     <div className="pane__intro" data-testid="timing-prompt">
       <button className="btn-primary" onClick={start} data-testid="start-timing">
-        <Play size={14} /> {fresh ? 'Start timing' : `Continue from line ${index + 1}`}
+        <Play size={14} /> Start timing
       </button>
       <span className="small">
-        Press <kbd>Enter</kbd> as each line starts
-        {fresh ? ' — the lyrics flow as soon as they are placed' : ''}. Double-click a timed line to hear it.
+        Press <kbd>Enter</kbd> as each line starts — the lyrics flow as soon as they are placed. Double-click
+        a timed line to hear it.
       </span>
     </div>
   );

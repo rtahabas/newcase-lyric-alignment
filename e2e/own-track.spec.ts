@@ -63,8 +63,7 @@ test('a track we bring is found, timed, kept and exported', async ({ page }) => 
   await expect(page.getByTestId('lyric-time')).toHaveText(['0:02.000', '0:06.000', '0:11.000']);
 
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: /Export/ }).click();
-  await page.getByRole('menuitem', { name: /LRC/ }).click();
+  await page.getByTestId('export-lrc').click();
   const lrc = await (await download).createReadStream().then(async (s) => {
     let text = '';
     for await (const chunk of s) text += String(chunk);

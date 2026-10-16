@@ -9,6 +9,9 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /** Keys inside an open menu or dialog belong to it (Enter must click "Delete", not stamp a line). */
+const CONTROLS = 'button, a[href], summary, [role="button"], input[type="checkbox"]';
+const controlOf = (t: EventTarget | null) => (t instanceof Element ? t.closest(CONTROLS) : null);
+
 const insideOverlay = (target: EventTarget | null) =>
   target instanceof Element && !!target.closest('[role="dialog"], [role="menu"], [role="alertdialog"]');
 
@@ -23,8 +26,23 @@ export function useShortcuts(ctx: CommandContext, enabled: boolean): void {
   });
   useEffect(() => {
     if (!enabled) return;
+    /**
+     * The control the pointer last focused. Enter/Space on a control reached
+     * with the keyboard (Tab) activate it - Tab to "Keep mine", press Enter. On a
+     * control that was just clicked they go back to stamping and playback.
+     * (`:focus-visible` cannot tell: Chromium turns it on at the key press.)
+     */
+    let clicked: Element | null = null;
+    const onPointer = (e: PointerEvent) => (clicked = controlOf(e.target));
+    const onFocus = (e: FocusEvent) => {
+      if (controlOf(e.target) !== clicked) clicked = null;
+    };
+    const activatesControl = (e: KeyboardEvent) => {
+      const control = controlOf(e.target);
+      return (e.key === 'Enter' || e.key === ' ') && !!control && control !== clicked;
+    };
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || insideOverlay(e.target)) return;
+      if (e.defaultPrevented || insideOverlay(e.target) || activatesControl(e)) return;
       const isSave = (e.metaKey || e.ctrlKey) && e.key === 's';
       if (isTyping(e.target) && !isSave) return;
       const cmd = COMMANDS.find((c) => c.match(e));
@@ -34,11 +52,17 @@ export function useShortcuts(ctx: CommandContext, enabled: boolean): void {
         e.preventDefault();
         return;
       }
-      // Also stops a focused button from "clicking" on Space/Enter on top of the command.
+      // A mouse-focused button would otherwise also "click" on Space/Enter.
       e.preventDefault();
       cmd.run(ref.current, e);
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPointer, true);
+    window.addEventListener('focusin', onFocus, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPointer, true);
+      window.removeEventListener('focusin', onFocus, true);
+    };
   }, [enabled]);
 }

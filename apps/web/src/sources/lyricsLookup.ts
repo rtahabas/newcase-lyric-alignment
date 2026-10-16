@@ -49,14 +49,28 @@ export function dedupe(list: LyricsCandidate[]): LyricsCandidate[] {
   });
 }
 
+/** Unknown on either side counts as compatible; otherwise they must share a real word. */
+export function compatibleArtist(a: string, b: string): boolean {
+  const x = norm(a);
+  const y = norm(b);
+  if (!x || !y || x.includes(y) || y.includes(x)) return true;
+  const words = new Set(x.split(' ').filter((w) => w.length >= 3));
+  return y.split(' ').some((w) => words.has(w));
+}
+
 /**
- * Whether to fill the sheet without asking: the same song title (a cover or a
- * different master has the same words), or the same length. Anything less is
- * offered as a choice.
+ * Whether to fill the sheet without asking: the same song title by a compatible
+ * artist (a cover or another master has the same words; another song with the
+ * same name does not), or the same length. Anything less is offered as a choice.
  */
-export function isConfident(c: LyricsCandidate | undefined, title: string, durationMs: Ms | null): boolean {
+export function isConfident(
+  c: LyricsCandidate | undefined,
+  title: string,
+  artist: string,
+  durationMs: Ms | null,
+): boolean {
   if (!c) return false;
-  if (sameTitle(c.title, title)) return true;
+  if (sameTitle(c.title, title) && compatibleArtist(c.artist, artist)) return true;
   return (
     durationMs !== null && c.durationMs !== null && Math.abs(c.durationMs - durationMs) <= SAME_LENGTH_MS
   );

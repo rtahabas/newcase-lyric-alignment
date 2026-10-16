@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Ms } from '../../lib/time';
 import { formatShort } from '../../lib/time';
 import { parseLyricSheet } from '../../lib/lyrics';
@@ -11,6 +11,7 @@ type Props = {
   sheet: string;
   onSheet: (s: string) => void;
   title: string;
+  artist: string;
   durationMs: Ms | null;
   /** Owned by the dialog, which also needs the timed versions (draft timings). */
   lookup: LookupState;
@@ -38,34 +39,37 @@ function SourceNote({ candidate: c, durationMs }: { candidate: LyricsCandidate; 
 /** Where the current sheet came from: the user's own typing always wins over a lookup. */
 export type SheetOrigin =
   | { kind: 'empty' }
-  | { kind: 'lookup'; candidate: LyricsCandidate }
+  /** `auto`: filled by the lookup; false once the user picked this match themselves. */
+  | { kind: 'lookup'; candidate: LyricsCandidate; auto: boolean }
   | { kind: 'typed' };
 
 /**
  * The lyric sheet for a new track: filled automatically from LRCLIB when the
  * match is confident, offered as choices when it is not, and always editable.
  */
-export function LyricsField({ sheet, onSheet, title, durationMs, lookup, onRetry }: Props) {
+export function LyricsField({ sheet, onSheet, title, artist, durationMs, lookup, onRetry }: Props) {
   const [origin, setOrigin] = useState<SheetOrigin>({ kind: 'empty' });
+  /** The lookup result already acted on: each result may auto-fill at most once. */
+  const handled = useRef<LookupState | null>(null);
   const lines = parseLyricSheet(sheet).length;
 
   const use = (c: LyricsCandidate) => {
     onSheet(c.lyrics);
-    setOrigin({ kind: 'lookup', candidate: c });
+    setOrigin({ kind: 'lookup', candidate: c, auto: false });
   };
 
-  // Auto-fill only a confident match, and never over something the user typed.
+  // Auto-fill a confident match once per lookup result - never over the user's
+  // typing or their own pick, and never again after they clear the field.
   useEffect(() => {
-    if (lookup.status !== 'done' || origin.kind === 'typed') return;
+    if (lookup.status !== 'done' || handled.current === lookup) return;
+    handled.current = lookup;
+    if (origin.kind === 'typed' || (origin.kind === 'lookup' && !origin.auto)) return;
     const best = lookup.candidates[0];
-    if (
-      isConfident(best, title, durationMs) &&
-      !(origin.kind === 'lookup' && origin.candidate.id === best.id)
-    ) {
+    if (best && isConfident(best, title, artist, durationMs)) {
       onSheet(best.lyrics);
-      setOrigin({ kind: 'lookup', candidate: best });
+      setOrigin({ kind: 'lookup', candidate: best, auto: true });
     }
-  }, [lookup, title, durationMs, origin, onSheet]);
+  }, [lookup, title, artist, durationMs, origin, onSheet]);
 
   return (
     <div className="field">
@@ -76,6 +80,7 @@ export function LyricsField({ sheet, onSheet, title, durationMs, lookup, onRetry
         lookup={lookup}
         origin={origin}
         title={title}
+        artist={artist}
         durationMs={durationMs}
         onUse={use}
         onRetry={onRetry}

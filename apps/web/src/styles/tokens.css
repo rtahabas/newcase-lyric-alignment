@@ -1,0 +1,87 @@
+/*
+ * Design tokens. Visual language inspired by conversion.al (warm off-white,
+ * near-black ink, orange primary, teal for "done", soft glow on primary
+ * actions) - no logo or brand name is used. Every text colour meets WCAG AA
+ * (4.5:1) on the surfaces it sits on; the bright brand orange is used only
+ * where it carries no text (glows, tints, ticks).
+ */
+:root {
+  --bg: #f8f7f4;
+  --surface: #ffffff;
+  --surface-2: #f3f1ec;
+  --border: #e7e5df;
+  --text: #0a0a14;
+  --muted: #5d5d66;
+  --accent: #c2410c; /* text-safe orange: playhead, stamp, primary actions */
+  --accent-bright: #f97316; /* decorative only */
+  --accent-glow: rgb(249 115 22 / 0.32);
+  --accent-ink: #ffffff;
+  --select: #2563eb;
+  --timed: #17786c;
+  --untimed: #b4b0a8;
+  --warn: #946116;
+  --danger: #b42318;
+  --wave: #a19d94;
+  --block-a: #def1ec;
+  --block-b: #fdebdc;
+  --grid-line: rgb(10 10 20 / 0.045);
+
+  --radius: 10px;
+  --font-sans: -apple-system, system-ui, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: light dark;
+}
+
+/*
+ * Dark tokens: chosen explicitly (data-theme="dark", from the theme button), or
+ * following the OS when no choice was made. Light is the :root default above;
+ * data-theme="light" pins it even on a dark OS.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f0f14;
+  --surface: #17171d;
+  --surface-2: #202028;
+  --border: #2c2c36;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --accent: #fb923c;
+  --accent-bright: #fb923c;
+  --accent-glow: rgb(251 146 60 / 0.25);
+  --accent-ink: #1a0d02;
+  --select: #7aa2ff;
+  --timed: #2dd4bf;
+  --untimed: #52525b;
+  --warn: #e2a948;
+  --danger: #f87171;
+  --wave: #5b5b66;
+  --block-a: #12302c;
+  --block-b: #3a2414;
+  --grid-line: rgb(255 255 255 / 0.04);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0f0f14;
+    --surface: #17171d;
+    --surface-2: #202028;
+    --border: #2c2c36;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+    --accent: #fb923c;
+    --accent-bright: #fb923c;
+    --accent-glow: rgb(251 146 60 / 0.25);
+    --accent-ink: #1a0d02;
+    --select: #7aa2ff;
+    --timed: #2dd4bf;
+    --untimed: #52525b;
+    --warn: #e2a948;
+    --danger: #f87171;
+    --wave: #5b5b66;
+    --block-a: #12302c;
+    --block-b: #3a2414;
+    --grid-line: rgb(255 255 255 / 0.04);
+  }
+}

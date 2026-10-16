@@ -6,7 +6,7 @@ import type { Warning } from '../../editor/warnings';
 import { WARNING_TEXT } from '../../editor/warnings';
 import { formatMs } from '../../lib/time';
 import type { DropZone } from './lineDrag';
-import { dropZone, isLineDrag, startLineDrag } from './lineDrag';
+import { dropZone, endLineDrag, isLineDrag, startLineDrag } from './lineDrag';
 
 type Props = {
   line: Line;
@@ -41,16 +41,17 @@ export const LyricRow = memo(function LyricRow(p: Props) {
       aria-selected={p.selected}
       role="option"
       draggable
-      onDragStart={(e) => startLineDrag(e, p.line.id)}
+      onDragStart={(e) => startLineDrag(e, p.line.id, p.index)}
+      onDragEnd={endLineDrag}
       onDragOver={(e) => {
         if (!isLineDrag(e)) return;
         e.preventDefault();
-        setZone(dropZone(e));
+        setZone(dropZone(e, p.index));
       }}
       onDragLeave={() => setZone(null)}
       onDrop={(e) => {
         setZone(null);
-        p.onDropLine(p.line.id, dropZone(e), e);
+        p.onDropLine(p.line.id, dropZone(e, p.index), e);
       }}
       onClick={(e) => p.onClick(p.line.id, e)}
       onDoubleClick={() => p.onJump(p.line.id)}

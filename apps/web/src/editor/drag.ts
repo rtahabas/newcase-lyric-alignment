@@ -5,7 +5,8 @@
  */
 import type { Doc, LineId } from './types';
 import type { Ms } from '../lib/time';
-import { clampShift, MIN_SEGMENT_MS, setSegment, shiftSegments, trimEdge } from './timing';
+import { formatMs } from '../lib/time';
+import { clampShift, MIN_SEGMENT_MS, selectionSpan, setSegment, shiftSegments, trimEdge } from './timing';
 
 export type DragOp =
   | { kind: 'move'; ids: LineId[]; deltaMs: Ms }
@@ -69,7 +70,11 @@ export function snapTime(t: Ms, targets: Ms[], threshold: Ms): Ms {
   return best;
 }
 
-/** Snap a block move: whichever of the block's two outer edges lands closer to a target wins. */
+/**
+ * Snap a block move: whichever of the block's two outer edges lands closer to a
+ * target wins. `snapAt` is where the snapped edge ended up (for the guide line),
+ * or null when nothing snapped.
+ */
 export function snapMove(
   doc: Doc,
   ids: LineId[],
@@ -77,14 +82,25 @@ export function snapMove(
   targets: Ms[],
   threshold: Ms,
   dur: Ms | null,
-): Ms {
-  const segs = ids.map((id) => doc.segments[id]).filter(Boolean);
-  if (!segs.length) return deltaMs;
-  const start = Math.min(...segs.map((s) => s.startMs)) + deltaMs;
-  const end = Math.max(...segs.map((s) => s.endMs)) + deltaMs;
+): { deltaMs: Ms; snapAt: Ms | null } {
+  const span = selectionSpan(doc, ids);
+  if (!span) return { deltaMs, snapAt: null };
+  const start = span.startMs + deltaMs;
+  const end = span.endMs + deltaMs;
   const byStart = snapTime(start, targets, threshold) - start;
   const byEnd = snapTime(end, targets, threshold) - end;
-  const adjust =
-    byStart === 0 ? byEnd : byEnd === 0 ? byStart : Math.abs(byStart) <= Math.abs(byEnd) ? byStart : byEnd;
-  return clampShift(doc, ids, deltaMs + adjust, dur);
+  const useStart = byStart !== 0 && (byEnd === 0 || Math.abs(byStart) <= Math.abs(byEnd));
+  const adjust = useStart ? byStart : byEnd;
+  const d = clampShift(doc, ids, deltaMs + adjust, dur);
+  const snapped = adjust !== 0 && d === deltaMs + adjust;
+  return { deltaMs: d, snapAt: snapped ? (useStart ? span.startMs : span.endMs) + d : null };
+}
+
+/** The undo label for a drag: "Move 3 lines +0:00.500", "Trim line 4 end to 0:12.340". */
+export function dragLabel(op: DragOp, lineNo: (id: LineId) => number): string {
+  if (op.kind === 'move') {
+    const what = op.ids.length === 1 ? `line ${lineNo(op.ids[0])}` : `${op.ids.length} lines`;
+    return `Move ${what} ${op.deltaMs >= 0 ? '+' : '−'}${formatMs(Math.abs(op.deltaMs))}`;
+  }
+  return `Trim line ${lineNo(op.id)} ${op.edge} to ${formatMs(op.t)}`;
 }

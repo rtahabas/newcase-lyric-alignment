@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Doc } from './types';
-import { clampShift, moveSelectionTo, PROVISIONAL_MS, shiftSegments, stampStart, trimEdge } from './timing';
+import {
+  clampShift,
+  moveSelectionTo,
+  PROVISIONAL_MS,
+  selectionSpan,
+  shiftSegments,
+  stampStart,
+  trimEdge,
+} from './timing';
 
 const doc = (n: number, segs: Record<string, [number, number]> = {}): Doc => ({
   lines: Array.from({ length: n }, (_, i) => ({ id: String(i + 1), text: `line ${i + 1}` })),
@@ -63,5 +71,13 @@ describe('trimEdge', () => {
   it('never lets a trim invert or collapse the segment', () => {
     const d = trimEdge(doc(1, { '1': [1000, 2000] }), '1', 'start', 5000, 60_000);
     expect(d.segments['1'].startMs).toBeLessThan(d.segments['1'].endMs);
+  });
+});
+
+describe('selectionSpan', () => {
+  it('spans the timed lines only, or is null when none is timed', () => {
+    const d = doc(3, { '1': [1000, 2000], '3': [5000, 9000] });
+    expect(selectionSpan(d, ['1', '2', '3'])).toEqual({ startMs: 1000, endMs: 9000 });
+    expect(selectionSpan(d, ['2'])).toBeNull();
   });
 });
